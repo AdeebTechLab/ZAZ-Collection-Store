@@ -109,11 +109,28 @@
     saleTagInput.value = product.saleTag || '';
     discountRow.classList.toggle('hidden', !discountInput.checked);
 
+    // Shows a live "Auto: X% Off" placeholder in the Badge Text field,
+    // computed from Old Price vs Price, so a manager can see exactly what
+    // badge will appear on the storefront without typing anything. Typing
+    // a value into the field still overrides it with custom wording.
+    function updateAutoBadgePlaceholder() {
+      const oldP = parseFloat(oldPriceInput.value);
+      const newP = parseFloat(priceInput.value);
+      if (!Number.isNaN(oldP) && !Number.isNaN(newP) && oldP > newP && newP >= 0) {
+        const pct = Math.round((1 - newP / oldP) * 100);
+        saleTagInput.placeholder = `Auto: ${pct}% Off`;
+      } else {
+        saleTagInput.placeholder = 'e.g. 10% Off';
+      }
+    }
+    updateAutoBadgePlaceholder();
+
     nameInput.addEventListener('input', () => { product.name = nameInput.value; });
     categoryInput.addEventListener('change', () => { product.category = categoryInput.value; });
     priceInput.addEventListener('input', () => {
       const v = parseFloat(priceInput.value);
       product.price = Number.isNaN(v) ? 0 : v;
+      updateAutoBadgePlaceholder();
     });
     stockInput.addEventListener('input', () => {
       const v = parseInt(stockInput.value, 10);
@@ -130,10 +147,12 @@
         delete product.saleTag;
         saleTagInput.value = '';
       }
+      updateAutoBadgePlaceholder();
     });
     oldPriceInput.addEventListener('input', () => {
       const v = parseFloat(oldPriceInput.value);
       product.oldPrice = Number.isNaN(v) ? 0 : v;
+      updateAutoBadgePlaceholder();
     });
     // Left blank, the storefront falls back to an auto-computed "X% Off"
     // badge (see js/flash-sales-render.js) — this field just lets a manager
