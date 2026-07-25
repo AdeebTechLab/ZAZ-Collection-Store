@@ -5,6 +5,12 @@
   let nextId = 1;
   let activeCategoryFilter = '';
 
+  // Category keys are fixed (used as CSS classes for storefront filtering
+  // and as each product's stored `category` value) — only their display
+  // labels are editable, via the Edit Categories modal below.
+  const VALID_CATEGORY_KEYS = ['women', 'men', 'bag', 'shoes', 'watches'];
+  let categoryLabels = { women: 'Women', men: 'Men', bag: 'Bag', shoes: 'Shoes', watches: 'Watches' };
+
   const authGate = document.getElementById('auth-gate');
   const app = document.getElementById('app');
   const usernameLabel = document.getElementById('username-label');
@@ -14,6 +20,12 @@
   const saveStatus = document.getElementById('save-status');
   const banner = document.getElementById('banner');
   const productTemplate = document.getElementById('product-template');
+  const editCategoriesBtn = document.getElementById('edit-categories-btn');
+  const categoriesModal = document.getElementById('categories-modal');
+  const categoriesFieldsContainer = document.getElementById('categories-fields');
+  const categoriesCloseX = document.getElementById('categories-close-x');
+  const categoriesCancelBtn = document.getElementById('categories-cancel-btn');
+  const categoriesSaveBtn = document.getElementById('categories-save-btn');
 
   function showBanner(message, type) {
     banner.textContent = message;
@@ -43,10 +55,48 @@
       usernameLabel.textContent = data.username || '';
       authGate.classList.add('hidden');
       app.classList.remove('hidden');
+      await loadCategories();
       await loadProducts();
     } catch (err) {
       authGate.textContent = 'Could not check your session. Please refresh.';
     }
+  }
+
+  // --- Load & apply category labels ---
+  async function loadCategories() {
+    try {
+      const res = await fetch('/api/categories', { cache: 'no-store' });
+      if (!res.ok) throw new Error('Failed to load categories (status ' + res.status + ')');
+      const data = await res.json();
+      VALID_CATEGORY_KEYS.forEach((key) => {
+        if (typeof data[key] === 'string' && data[key].trim()) categoryLabels[key] = data[key];
+      });
+    } catch (err) {
+      // Non-fatal — keep the built-in default labels (Women/Men/Bag/Shoes/Watches)
+      // so the admin panel still works even if this fetch fails.
+    }
+    applyCategoryLabels();
+  }
+
+  // Pushes the current categoryLabels into every place a category name is
+  // shown in the admin UI: the toolbar filter dropdown, the card template
+  // (so newly added products get the right labels), and every already
+  // rendered product card's category dropdown.
+  function applyCategoryLabels() {
+    VALID_CATEGORY_KEYS.forEach((key) => {
+      const filterOpt = categoryFilterSelect.querySelector(`option[value="${key}"]`);
+      if (filterOpt) filterOpt.textContent = categoryLabels[key];
+
+      const templateOpt = productTemplate.content.querySelector(`.p-category-input option[value="${key}"]`);
+      if (templateOpt) templateOpt.textContent = categoryLabels[key];
+    });
+
+    container.querySelectorAll('.p-category-input').forEach((select) => {
+      VALID_CATEGORY_KEYS.forEach((key) => {
+        const opt = select.querySelector(`option[value="${key}"]`);
+        if (opt) opt.textContent = categoryLabels[key];
+      });
+    });
   }
 
   // --- Load product data ---
@@ -494,6 +544,69 @@
   cropCancelBtn.addEventListener('click', cancelCropper);
   cropCloseX.addEventListener('click', cancelCropper);
   cropModal.addEventListener('click', (e) => { if (e.target === cropModal) cancelCropper(); });
+
+  // --- Edit Categories modal ---
+  function openCategoriesModal() {
+    categoriesFieldsContainer.innerHTML = '';
+    VALID_CATEGORY_KEYS.forEach((key) => {
+      const field = document.createElement('label');
+      field.className = 'crop-field';
+      field.textContent = key.charAt(0).toUpperCase() + key.slice(1);
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.dataset.categoryKey = key;
+      input.value = categoryLabels[key];
+      field.appendChild(input);
+      categoriesFieldsContainer.appendChild(field);
+    });
+    categoriesModal.classList.remove('hidden');
+  }
+
+  function closeCategoriesModal() {
+    categoriesModal.classList.add('hidden');
+  }
+
+  editCategoriesBtn.addEventListener('click', openCategoriesModal);
+  categoriesCloseX.addEventListener('click', closeCategoriesModal);
+  categoriesCancelBtn.addEventListener('click', closeCategoriesModal);
+  categoriesModal.addEventListener('click', (e) => {
+    if (e.target === categoriesModal) closeCategoriesModal();
+  });
+
+  categoriesSaveBtn.addEventListener('click', async () => {
+    const updated = {};
+    let hasError = false;
+    categoriesFieldsContainer.querySelectorAll('input[data-category-key]').forEach((input) => {
+      const value = input.value.trim();
+      if (!value) hasError = true;
+      updated[input.dataset.categoryKey] = value;
+    });
+    if (hasError) {
+      showBanner('Every category needs a label.', 'error');
+      return;
+    }
+
+    categoriesSaveBtn.disabled = true;
+    categoriesSaveBtn.textContent = 'Saving…';
+    try {
+      const res = await fetch('/api/categories', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to save categories');
+      categoryLabels = updated;
+      applyCategoryLabels();
+      closeCategoriesModal();
+      showBanner('Categories updated — changes are live on the site now.', 'success');
+    } catch (err) {
+      showBanner('Could not save categories: ' + err.message, 'error');
+    } finally {
+      categoriesSaveBtn.disabled = false;
+      categoriesSaveBtn.textContent = 'Save Categories';
+    }
+  });
 
   // --- Add product ---
   document.getElementById('add-product-btn').addEventListener('click', () => {

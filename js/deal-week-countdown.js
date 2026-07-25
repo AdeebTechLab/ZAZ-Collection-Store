@@ -1,4 +1,4 @@
-/* Drives the "Deal Of The Week" countdown circles on sales.html.
+/* Drives the "Deal Of The Week" countdown circles on index.html.
    Deadline is set once per browser (persisted in sessionStorage) so the
    clock doesn't reset back to 2 days / 23 hours every time the page
    reloads within the same session — it just keeps counting down. */

@@ -378,6 +378,12 @@ body {
 }
 .crop-field input:focus { outline: none; border-color: var(--brand); }
 .crop-lock-label { margin-top: 0; }
+.categories-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+}
+.categories-fields .crop-field input { width: 100%; }
 .crop-hint {
   font-family: Poppins-Regular, sans-serif;
   font-size: 12px;

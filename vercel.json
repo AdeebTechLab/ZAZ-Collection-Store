@@ -2,6 +2,9 @@
   "functions": {
     "api/products.js": {
       "includeFiles": "data/**"
+    },
+    "api/categories.js": {
+      "includeFiles": "data/**"
     }
   }
 }

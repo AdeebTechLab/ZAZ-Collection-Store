@@ -44,6 +44,7 @@
             <option value="shoes">Shoes</option>
             <option value="watches">Watches</option>
           </select>
+          <button id="edit-categories-btn" class="btn btn-secondary">✏️ Edit Categories</button>
         </div>
         <p class="hint">Edit any field below, then click <strong>Save Changes</strong> to publish it to the live site.</p>
       </div>
@@ -100,6 +101,28 @@
       <button class="btn btn-danger btn-sm delete-product-btn">Delete</button>
     </div>
   </template>
+
+  <!-- Categories editor modal: rename the label shown for each fixed
+       category. The underlying key (women/men/bag/shoes/watches) can't be
+       changed here since it's used for filtering & product data on the
+       storefront — only the display text updates. -->
+  <div id="categories-modal" class="crop-modal hidden">
+    <div class="crop-modal-content">
+      <div class="crop-modal-header">
+        <h2>Edit Categories</h2>
+        <button type="button" id="categories-close-x" class="crop-close-btn" aria-label="Cancel">&times;</button>
+      </div>
+
+      <p class="crop-hint">Rename how each category is labeled on the site and in this admin panel. Products stay assigned to the same category — only its display name changes.</p>
+
+      <div id="categories-fields" class="categories-fields"></div>
+
+      <div class="crop-modal-actions">
+        <button type="button" id="categories-cancel-btn" class="btn btn-ghost">Cancel</button>
+        <button type="button" id="categories-save-btn" class="btn btn-primary">Save Categories</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Photo crop modal: shown whenever a manager picks/changes a product photo -->
   <div id="crop-modal" class="crop-modal hidden">
