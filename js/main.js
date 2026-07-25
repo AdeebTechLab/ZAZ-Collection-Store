@@ -141,8 +141,17 @@
     });
 
     // init Isotope
+    // Grids marked [data-dynamic-products] are populated asynchronously by
+    // js/products-render.js (from /api/products), which initializes/reloads
+    // Isotope itself once the real cards and their images are actually in
+    // the DOM. If we ALSO initialized Isotope here on window load, the two
+    // initializations race and fight over the same container: whichever one
+    // last touched a stale/half-updated set of cards leaves items with wrong
+    // absolute-position offsets, which is what makes a product card appear
+    // to float down and overlap the footer. So skip those grids here and
+    // leave them entirely to products-render.js.
     $(window).on('load', function () {
-        var $grid = $topeContainer.each(function () {
+        var $grid = $topeContainer.not('[data-dynamic-products]').each(function () {
             $(this).isotope({
                 itemSelector: '.isotope-item',
                 layoutMode: 'fitRows',

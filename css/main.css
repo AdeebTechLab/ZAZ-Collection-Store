@@ -1284,6 +1284,14 @@ Input, textarea : 14px/1.6 '', Arial, sans-serif;
   .prev-slick1 {
     left: 15px;
   }
+
+  /* Touchscreens have no real hover state, so the opacity:0/hover-to-reveal
+     behavior above leaves these arrows effectively invisible and unusable
+     on mobile — the first tap just "reveals" them instead of navigating.
+     Keep them always visible below the desktop breakpoint instead. */
+  .arrow-slick1 {
+    opacity: 1;
+  }
 }
 
 /*---------------------------------------------*/
