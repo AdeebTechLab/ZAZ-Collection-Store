@@ -136,6 +136,11 @@
     modal.classList.add('show-modal1');
   }
 
+  // Exposed so other renderers on the same page (e.g. the Flash Sales
+  // carousel) can open the same shared Quick View modal for their own
+  // product cards, instead of duplicating the modal-population logic.
+  window.ZazQuickView = { open: openQuickView };
+
   // Add-to-cart button inside Quick View is wired once; it always acts on
   // whichever product is currently loaded into the modal.
   function bindQuickViewAddToCart() {
@@ -213,9 +218,21 @@
     }
 
     for (const grid of grids) {
+      let list = grid.hasAttribute('data-sale-only')
+        ? products.filter((p) => p.oldPrice != null && Number(p.oldPrice) > Number(p.price))
+        : products;
+
       const limit = grid.getAttribute('data-limit');
-      const list = limit ? products.slice(0, Number(limit)) : products;
+      if (limit) list = list.slice(0, Number(limit));
+
       grid.innerHTML = '';
+
+      if (!list.length && grid.hasAttribute('data-sale-only')) {
+        grid.innerHTML = '<div class="col-md-12 txt-center stext-107 cl6 p-tb-40">' +
+          'No items on sale right now — check back soon!</div>';
+        continue;
+      }
+
       list.forEach((product) => grid.appendChild(buildCard(product)));
       await waitForImages(grid);
     }

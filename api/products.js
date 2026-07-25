@@ -39,6 +39,9 @@ function validateProducts(data) {
         return `Product "${product.name}"'s old price must be higher than its current price`;
       }
     }
+    if (product.saleTag != null && typeof product.saleTag !== 'string') {
+      return `Product "${product.name}" has an invalid badge text`;
+    }
     if (typeof product.stock !== 'number' || Number.isNaN(product.stock) || product.stock < 0) {
       return `Product "${product.name}" needs a valid non-negative stock quantity`;
     }

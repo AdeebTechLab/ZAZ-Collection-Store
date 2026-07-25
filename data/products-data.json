@@ -142,5 +142,45 @@
     "oldPrice": null,
     "stock": 25,
     "image": "product-16.jpg"
+  },
+  {
+    "id": 17,
+    "name": "Long Sleeve T-Shirt",
+    "category": "women",
+    "price": 40.0,
+    "oldPrice": 50.0,
+    "stock": 25,
+    "image": "long-sleeve-tshirt.jpg",
+    "saleTag": "10% Off"
+  },
+  {
+    "id": 18,
+    "name": "Grey Check Coat",
+    "category": "men",
+    "price": 45.0,
+    "oldPrice": 55.0,
+    "stock": 25,
+    "image": "grey-check-coat.jpg",
+    "saleTag": "10% Off"
+  },
+  {
+    "id": 19,
+    "name": "Silk White Shirt",
+    "category": "women",
+    "price": 35.0,
+    "oldPrice": 45.0,
+    "stock": 25,
+    "image": "silk-white-shirt.jpg",
+    "saleTag": "10% Off"
+  },
+  {
+    "id": 20,
+    "name": "Blue Jeans Pant",
+    "category": "men",
+    "price": 35.0,
+    "oldPrice": 45.0,
+    "stock": 25,
+    "image": "blue-jeans-pant.jpg",
+    "saleTag": "10% Off"
   }
 ]

@@ -95,6 +95,7 @@
     const discountInput = node.querySelector('.p-discount-input');
     const discountRow = node.querySelector('.discount-row');
     const oldPriceInput = node.querySelector('.p-oldprice-input');
+    const saleTagInput = node.querySelector('.p-saletag-input');
     const deleteBtn = node.querySelector('.delete-product-btn');
 
     img.src = imageSrc(product.image);
@@ -105,6 +106,7 @@
     stockInput.value = product.stock != null ? product.stock : 0;
     discountInput.checked = product.oldPrice != null;
     oldPriceInput.value = product.oldPrice != null ? product.oldPrice : '';
+    saleTagInput.value = product.saleTag || '';
     discountRow.classList.toggle('hidden', !discountInput.checked);
 
     nameInput.addEventListener('input', () => { product.name = nameInput.value; });
@@ -125,11 +127,19 @@
       } else {
         delete product.oldPrice;
         oldPriceInput.value = '';
+        delete product.saleTag;
+        saleTagInput.value = '';
       }
     });
     oldPriceInput.addEventListener('input', () => {
       const v = parseFloat(oldPriceInput.value);
       product.oldPrice = Number.isNaN(v) ? 0 : v;
+    });
+    // Left blank, the storefront falls back to an auto-computed "X% Off"
+    // badge (see js/flash-sales-render.js) — this field just lets a manager
+    // override that with custom wording (e.g. "Deal Of The Week", "BOGO").
+    saleTagInput.addEventListener('input', () => {
+      product.saleTag = saleTagInput.value.trim() || null;
     });
 
     photoInput.addEventListener('change', async () => {
@@ -474,6 +484,7 @@
       category: activeCategoryFilter || 'women',
       price: 0,
       oldPrice: null,
+      saleTag: null,
       stock: 0,
       image: '',
     };
@@ -542,6 +553,9 @@
         if (product.oldPrice <= product.price) {
           return `"${product.name}"'s old price must be higher than its current price for the discount to show.`;
         }
+      }
+      if (product.saleTag != null && typeof product.saleTag !== 'string') {
+        return `"${product.name}" has an invalid badge text.`;
       }
       if (seenIds.has(product.id)) {
         return `Duplicate product id detected for "${product.name}". Please refresh and try again.`;

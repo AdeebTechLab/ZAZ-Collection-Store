@@ -2050,6 +2050,16 @@ input.num-product::-webkit-inner-spin-button {
 [ Block2 ]*/
 .block2-pic {
   position: relative;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+}
+
+.block2-pic img {
+  height: 100%;
+  -o-object-fit: cover;
+  object-fit: cover;
+  -o-object-position: center top;
+  object-position: center top;
 }
 
 .block2-btn {
