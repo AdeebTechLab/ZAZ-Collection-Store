@@ -2692,6 +2692,25 @@ input.num-product::-webkit-inner-spin-button {
   background-repeat: no-repeat;
 }
 
+/*---------------------------------------------*/
+/* Page-title hero (About/Contact/Blog/FAQ/Shipping/Returns):
+   sized to the source photo's own aspect ratio (1920x930) so the
+   full image is always visible instead of being cropped top/bottom. */
+.hero-page-title {
+  aspect-ratio: 1920 / 930;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+@media (max-width: 767px) {
+  .hero-page-title {
+    aspect-ratio: 16 / 13;
+  }
+}
+
 
 
 

@@ -540,7 +540,6 @@ body {
 .category-row .crop-field input { width: 100%; }
 .category-row-delete-btn {
   flex-shrink: 0;
-  margin-top: 18px;
 }
 .category-row-reorder {
   display: flex;

@@ -666,16 +666,11 @@
 
     const field = document.createElement('label');
     field.className = 'crop-field';
-    const caption = document.createElement('span');
-    caption.textContent = originalKey
-      ? originalKey.charAt(0).toUpperCase() + originalKey.slice(1)
-      : 'New Category';
     const input = document.createElement('input');
     input.type = 'text';
     input.className = 'category-label-input';
     input.placeholder = 'e.g. Kids Wear';
     input.value = label || '';
-    field.appendChild(caption);
     field.appendChild(input);
 
     const deleteBtn = document.createElement('button');
