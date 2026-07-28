@@ -19,86 +19,53 @@ live on the site immediately — no rebuild or redeploy needed.
 
 ## 1. Deploying the project on Vercel
 
-1. Push this project to a Git repository (GitHub, GitLab, or Bitbucket).
-2. Go to [vercel.com](https://vercel.com) → **Add New… → Project** → import that repository.
-3. Leave the build settings as default (no framework/build step is required — it's static
-   HTML/CSS/JS plus serverless functions). Click **Deploy**.
-4. The first deploy will work for browsing the storefront, but the admin panel **will not
-   work yet** until you complete steps 2 and 3 below (connect Blob storage and set the
-   environment variables).
+1. Push this project to a Git repo (GitHub, GitLab, or Bitbucket)
+2. **vercel.com → Add New → Project** → import the repo
+3. Leave build settings as default *(static site + serverless functions, no build step)* → **Deploy**
+
+⚠️ The storefront will work right away, but the admin panel needs steps 2 & 3 below first.
 
 ---
 
 ## 2. Connecting Vercel Blob storage
 
-The admin panel needs a Blob store to save product/category edits to (without it, the
-site just falls back to the read-only defaults in `data/`).
+Without this, the admin panel can't save — the site just falls back to the read-only
+defaults in `data/`. Quick steps:
 
-1. Open your project in the [Vercel dashboard](https://vercel.com/dashboard).
-2. Go to the **Storage** tab (top navigation of the project page).
-3. Click **Create Database** → choose **Blob**.
-4. Give it a name (e.g. `zaz-collection-store-blob`), then choose the **access mode**:
-   select **Public** (not Private). Product photos uploaded from the admin panel are
-   stored with public access so they can be shown directly on the storefront (see
-   `api/upload.js`), and **the access mode can't be changed later** — if you pick
-   Private here you'll need to delete and recreate the store. Click **Create**.
-5. On the next screen, Vercel will ask which project(s) to connect it to — select this
-   project and click **Connect**.
-6. This automatically adds a `BLOB_READ_WRITE_TOKEN` environment variable to your
-   project for all environments (Production, Preview, Development) — you don't need to
-   create this one by hand.
-7. Go to **Deployments** and **redeploy** the latest deployment (⋯ menu → **Redeploy**)
-   so the new environment variable is picked up by your functions.
+1. **Dashboard → Storage tab → Create Database → Blob**
+2. Name it, set access to **Public** ⚠️ *(not Private — can't be changed later)* → **Create**
+3. Select this project → **Connect** *(auto-adds `BLOB_READ_WRITE_TOKEN` to all environments)*
+4. **Deployments → ⋯ → Redeploy**
 
-That's it — `api/products.js` and `api/categories.js` will now read/write a
-`products-data.json` and `categories-data.json` file inside that Blob store whenever
-you click **Save Changes** / **Save Categories** in the admin panel.
+Done — the admin panel can now save products/categories to Blob storage.
 
 ---
 
 ## 3. Setting the remaining environment variables
 
-Besides the automatic `BLOB_READ_WRITE_TOKEN` from step 2, the admin panel needs three
-more environment variables that you set yourself, since they control who's allowed to
-log in and how sessions are secured.
+**Settings → Environment Variables**, add these (check Production/Preview/Development for each):
 
-1. In the Vercel dashboard, open your project → **Settings → Environment Variables**.
-2. Add the following (click **Add** after typing each one):
+| Name | Value |
+|---|---|
+| `ADMIN_USERNAME` | e.g. `admin` |
+| `ADMIN_PASSWORD` | a strong password |
+| `SESSION_SECRET` | a long random string (see below) |
 
-   | Name | Value | Notes |
-   |---|---|---|
-   | `ADMIN_USERNAME` | e.g. `admin` | Username required to log into `/admin` |
-   | `ADMIN_PASSWORD` | a strong password | Password required to log into `/admin` |
-   | `SESSION_SECRET` | a long random string | Signs the login session cookie — see below for how to generate one |
+**Generate `SESSION_SECRET`:**
+- Node: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
+- Git Bash / OpenSSL: `openssl rand -hex 32`
+- Or any password generator, 40+ random characters
 
-   For each variable, tick **Production**, **Preview**, and **Development** (unless you
-   intentionally want different admin credentials per environment).
-
-3. **Generating a `SESSION_SECRET`:** it just needs to be a long, random, unguessable
-   string — it's never shown to users. Generate one with any of these:
-   - In a terminal with Node.js installed: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
-   - In **Git Bash** (Windows) — it ships with OpenSSL, so Node isn't required:
-     `openssl rand -hex 32`
-   - Or any password generator set to 40+ random characters.
-
-4. After adding all three variables, go to **Deployments** and **redeploy** (⋯ menu →
-   **Redeploy**) so the functions pick them up. (Vercel does not apply new/changed
-   environment variables to a deployment retroactively — a redeploy is required.)
+Then **Deployments → ⋯ → Redeploy** so the functions pick up the new variables.
 
 ---
 
 ## 4. Verifying it works
 
-1. Visit `https://<your-project>.vercel.app/admin/login.html`.
-2. Log in with the `ADMIN_USERNAME` / `ADMIN_PASSWORD` you set.
-3. Edit a product (price, stock, discount, photo, etc.) or click **✏️ Edit Categories**
-   to rename a category, then click **Save Changes** / **Save Categories**.
-4. If it saves without an error banner, Blob storage is connected correctly. If you see
-   an error like *"Failed to save products/categories… make sure Vercel Blob storage is
-   connected"*, double check steps 2 and 3 above, then redeploy.
-5. Refresh the storefront (`index.html`, `product.html`) — your changes
-   should already be live, since those pages fetch live data from `/api/products` and
-   `/api/categories` on every load.
+1. Visit `https://<your-project>.vercel.app/admin/login.html` and log in
+2. Edit a product or category → **Save Changes** / **Save Categories**
+3. No error banner = Blob is connected. Error like *"Failed to save... make sure Vercel Blob storage is connected"* → recheck steps 2 & 3, then redeploy
+4. Refresh the storefront — changes are live immediately (pages fetch `/api/products` and `/api/categories` on load)
 
 ---
 

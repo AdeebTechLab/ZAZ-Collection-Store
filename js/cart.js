@@ -28,11 +28,11 @@
   }
 
   function money(n) {
-    return '$' + Number(n || 0).toFixed(2);
+    return 'Rs. ' + Math.round(Number(n || 0)).toLocaleString('en-US');
   }
 
   function imageSrc(image) {
-    if (!image) return 'images/product-01.jpg';
+    if (!image) return 'images/embroidered-lawn-kurti.jpg';
     if (/^https?:\/\//i.test(image) || image.startsWith('data:')) return image;
     return 'images/' + image;
   }

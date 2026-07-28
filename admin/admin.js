@@ -3,19 +3,20 @@
 
   let productsData = [];
   let nextId = 1;
-  let activeCategoryFilter = '';
 
-  // Category keys are fixed (used as CSS classes for storefront filtering
-  // and as each product's stored `category` value) — only their display
-  // labels are editable, via the Edit Categories modal below.
-  const VALID_CATEGORY_KEYS = ['women', 'men', 'bag', 'shoes', 'watches'];
-  let categoryLabels = { women: 'Women', men: 'Men', bag: 'Bag', shoes: 'Shoes', watches: 'Watches' };
+  // Categories used to be a fixed set of 5 keys. They're now fully dynamic —
+  // an admin can rename, add, or delete them via the Manage Categories modal
+  // — so instead of a hardcoded list we track whatever keys are currently
+  // loaded, in display order. categoryLabels below is just the built-in
+  // fallback used until /api/categories responds.
+  let categoryLabels = { women: 'Summer Wear', men: 'Winter Wear', bag: 'Ethnic Wear', shoes: 'Casual Wear', watches: 'Party Wear' };
+  let categoryOrder = Object.keys(categoryLabels);
 
   const authGate = document.getElementById('auth-gate');
   const app = document.getElementById('app');
   const usernameLabel = document.getElementById('username-label');
   const container = document.getElementById('products-container');
-  const categoryFilterSelect = document.getElementById('category-filter');
+  const categorySectionTemplate = document.getElementById('category-section-template');
   const saveBtn = document.getElementById('save-btn');
   const saveStatus = document.getElementById('save-status');
   const banner = document.getElementById('banner');
@@ -23,6 +24,7 @@
   const editCategoriesBtn = document.getElementById('edit-categories-btn');
   const categoriesModal = document.getElementById('categories-modal');
   const categoriesFieldsContainer = document.getElementById('categories-fields');
+  const categoriesAddBtn = document.getElementById('categories-add-btn');
   const categoriesCloseX = document.getElementById('categories-close-x');
   const categoriesCancelBtn = document.getElementById('categories-cancel-btn');
   const categoriesSaveBtn = document.getElementById('categories-save-btn');
@@ -41,6 +43,32 @@
     if (!image) return 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
     if (/^https?:\/\//i.test(image) || image.startsWith('data:')) return image;
     return '/images/' + image;
+  }
+
+  function escapeHtml(str) {
+    return String(str || '').replace(/[&<>"']/g, (c) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+    }[c]));
+  }
+
+  // Turns a typed-in category label like "Kids Wear" into a URL/CSS-safe key
+  // ("kids-wear"), matching the pattern the storefront and API expect.
+  // Falls back to a generic key, and de-dupes against existing/other-new
+  // keys so two categories never collide.
+  function slugifyCategoryKey(label, takenKeys) {
+    let base = String(label || '')
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    if (!base) base = 'category';
+    let key = base;
+    let n = 2;
+    while (takenKeys.has(key)) {
+      key = `${base}-${n}`;
+      n++;
+    }
+    return key;
   }
 
   // --- Auth gate ---
@@ -68,9 +96,10 @@
       const res = await fetch('/api/categories', { cache: 'no-store' });
       if (!res.ok) throw new Error('Failed to load categories (status ' + res.status + ')');
       const data = await res.json();
-      VALID_CATEGORY_KEYS.forEach((key) => {
-        if (typeof data[key] === 'string' && data[key].trim()) categoryLabels[key] = data[key];
-      });
+      if (data && typeof data === 'object' && Object.keys(data).length) {
+        categoryLabels = data;
+        categoryOrder = Object.keys(data);
+      }
     } catch (err) {
       // Non-fatal — keep the built-in default labels (Women/Men/Bag/Shoes/Watches)
       // so the admin panel still works even if this fetch fails.
@@ -78,24 +107,36 @@
     applyCategoryLabels();
   }
 
-  // Pushes the current categoryLabels into every place a category name is
-  // shown in the admin UI: the toolbar filter dropdown, the card template
-  // (so newly added products get the right labels), and every already
-  // rendered product card's category dropdown.
-  function applyCategoryLabels() {
-    VALID_CATEGORY_KEYS.forEach((key) => {
-      const filterOpt = categoryFilterSelect.querySelector(`option[value="${key}"]`);
-      if (filterOpt) filterOpt.textContent = categoryLabels[key];
+  // Builds the <option> list for a category <select>, in the current
+  // display order — used for the product-card template and for every
+  // already-rendered card, so a freshly added/renamed/deleted category
+  // shows up everywhere immediately.
+  function categoryOptionsHtml() {
+    return categoryOrder
+      .map((key) => `<option value="${escapeHtml(key)}">${escapeHtml(categoryLabels[key])}</option>`)
+      .join('');
+  }
 
-      const templateOpt = productTemplate.content.querySelector(`.p-category-input option[value="${key}"]`);
-      if (templateOpt) templateOpt.textContent = categoryLabels[key];
-    });
+  // Pushes the current categoryLabels/categoryOrder into every place a
+  // category is shown in the admin UI: the card template (so newly added
+  // products get the right dropdown), every already-rendered product card's
+  // category dropdown (preserving its current selection), and each category
+  // section's heading.
+  function applyCategoryLabels() {
+    const optionsHtml = categoryOptionsHtml();
+    const templateSelect = productTemplate.content.querySelector('.p-category-input');
+    if (templateSelect) templateSelect.innerHTML = optionsHtml;
 
     container.querySelectorAll('.p-category-input').forEach((select) => {
-      VALID_CATEGORY_KEYS.forEach((key) => {
-        const opt = select.querySelector(`option[value="${key}"]`);
-        if (opt) opt.textContent = categoryLabels[key];
-      });
+      const current = select.value;
+      select.innerHTML = optionsHtml;
+      if (categoryOrder.includes(current)) select.value = current;
+    });
+
+    container.querySelectorAll('.category-section').forEach((section) => {
+      const key = section.dataset.categoryKey;
+      const title = section.querySelector('.category-section-title');
+      if (key && title) title.textContent = categoryLabels[key];
     });
   }
 
@@ -121,20 +162,58 @@
   }
 
   // --- Rendering ---
+  // Products are grouped into one section per fixed category (in
+  // VALID_CATEGORY_KEYS order), mirroring how they're organized on the
+  // live storefront. Empty categories still render with a friendly
+  // placeholder so a manager can immediately add the first item to them.
   function renderAll() {
     container.innerHTML = '';
-    productsData.forEach((product) => {
-      if (activeCategoryFilter && product.category !== activeCategoryFilter) return;
-      container.appendChild(renderProduct(product));
+    categoryOrder.forEach((key) => {
+      container.appendChild(renderCategorySection(key));
     });
   }
 
-  categoryFilterSelect.addEventListener('change', () => {
-    activeCategoryFilter = categoryFilterSelect.value;
-    renderAll();
-  });
+  function renderCategorySection(categoryKey) {
+    const node = categorySectionTemplate.content.firstElementChild.cloneNode(true);
+    node.dataset.categoryKey = categoryKey;
+    const title = node.querySelector('.category-section-title');
+    const count = node.querySelector('.category-section-count');
+    const grid = node.querySelector('.category-products-grid');
 
-  function renderProduct(product) {
+    title.textContent = categoryLabels[categoryKey];
+
+    const items = productsData.filter((p) => p.category === categoryKey);
+    count.textContent = items.length === 1 ? '1 item' : `${items.length} items`;
+
+    if (items.length === 0) {
+      const empty = document.createElement('p');
+      empty.className = 'category-empty-hint';
+      empty.textContent = 'No products in this category yet.';
+      grid.appendChild(empty);
+    } else {
+      items.forEach((product, idx) => grid.appendChild(renderProduct(product, idx === 0, idx === items.length - 1)));
+    }
+    return node;
+  }
+
+  // Swaps `product` with its neighbor (within the same category, direction
+  // -1 = up, +1 = down) by swapping their positions in the underlying
+  // productsData array. Category grouping only filters/displays that array,
+  // so swapping the two real array slots is enough to change both the
+  // on-screen order and the order that gets saved/published.
+  function moveProduct(product, direction) {
+    const sameCategory = productsData.filter((p) => p.category === product.category);
+    const posInCategory = sameCategory.indexOf(product);
+    const swapWith = sameCategory[posInCategory + direction];
+    if (!swapWith) return;
+    const idxA = productsData.indexOf(product);
+    const idxB = productsData.indexOf(swapWith);
+    productsData[idxA] = swapWith;
+    productsData[idxB] = product;
+    renderAll();
+  }
+
+  function renderProduct(product, isFirst, isLast) {
     const node = productTemplate.content.firstElementChild.cloneNode(true);
     const img = node.querySelector('.product-photo-img');
     const photoInput = node.querySelector('.photo-input');
@@ -147,11 +226,18 @@
     const oldPriceInput = node.querySelector('.p-oldprice-input');
     const saleTagInput = node.querySelector('.p-saletag-input');
     const deleteBtn = node.querySelector('.delete-product-btn');
+    const moveUpBtn = node.querySelector('.move-up-btn');
+    const moveDownBtn = node.querySelector('.move-down-btn');
+
+    moveUpBtn.disabled = !!isFirst;
+    moveDownBtn.disabled = !!isLast;
+    moveUpBtn.addEventListener('click', () => moveProduct(product, -1));
+    moveDownBtn.addEventListener('click', () => moveProduct(product, 1));
 
     img.src = imageSrc(product.image);
     img.alt = product.name || '';
     nameInput.value = product.name || '';
-    categoryInput.value = product.category || 'women';
+    categoryInput.value = product.category || categoryOrder[0];
     priceInput.value = product.price != null ? product.price : '';
     stockInput.value = product.stock != null ? product.stock : 0;
     discountInput.checked = product.oldPrice != null;
@@ -176,7 +262,10 @@
     updateAutoBadgePlaceholder();
 
     nameInput.addEventListener('input', () => { product.name = nameInput.value; });
-    categoryInput.addEventListener('change', () => { product.category = categoryInput.value; });
+    categoryInput.addEventListener('change', () => {
+      product.category = categoryInput.value;
+      renderAll();
+    });
     priceInput.addEventListener('input', () => {
       const v = parseFloat(priceInput.value);
       product.price = Number.isNaN(v) ? 0 : v;
@@ -241,7 +330,7 @@
       if (!confirm(`Delete "${product.name || 'this product'}"?`)) return;
       const idx = productsData.indexOf(product);
       if (idx !== -1) productsData.splice(idx, 1);
-      node.remove();
+      renderAll();
     });
 
     return node;
@@ -545,20 +634,158 @@
   cropCloseX.addEventListener('click', cancelCropper);
   cropModal.addEventListener('click', (e) => { if (e.target === cropModal) cancelCropper(); });
 
-  // --- Edit Categories modal ---
+  // --- Manage Categories modal ---
+  // Each row in the list is either an existing category (data-original-key
+  // set to its real, unchangeable key — only its label can be edited) or a
+  // brand-new one added this session (data-original-key="" — a key is
+  // slugified from its label only once Save Categories is clicked).
+
+  function buildCategoryRow(originalKey, label) {
+    const row = document.createElement('div');
+    row.className = 'category-row';
+    row.dataset.originalKey = originalKey || '';
+
+    const reorder = document.createElement('div');
+    reorder.className = 'category-row-reorder';
+    const upBtn = document.createElement('button');
+    upBtn.type = 'button';
+    upBtn.className = 'btn-icon-light category-move-up-btn';
+    upBtn.title = 'Move up';
+    upBtn.setAttribute('aria-label', 'Move category up');
+    upBtn.innerHTML = '&#9650;';
+    upBtn.addEventListener('click', () => moveCategoryRow(row, -1));
+    const downBtn = document.createElement('button');
+    downBtn.type = 'button';
+    downBtn.className = 'btn-icon-light category-move-down-btn';
+    downBtn.title = 'Move down';
+    downBtn.setAttribute('aria-label', 'Move category down');
+    downBtn.innerHTML = '&#9660;';
+    downBtn.addEventListener('click', () => moveCategoryRow(row, 1));
+    reorder.appendChild(upBtn);
+    reorder.appendChild(downBtn);
+
+    const field = document.createElement('label');
+    field.className = 'crop-field';
+    const caption = document.createElement('span');
+    caption.textContent = originalKey
+      ? originalKey.charAt(0).toUpperCase() + originalKey.slice(1)
+      : 'New Category';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'category-label-input';
+    input.placeholder = 'e.g. Kids Wear';
+    input.value = label || '';
+    field.appendChild(caption);
+    field.appendChild(input);
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'btn btn-danger btn-sm category-row-delete-btn';
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.addEventListener('click', () => startDeleteConfirm(row));
+
+    row.appendChild(reorder);
+    row.appendChild(field);
+    row.appendChild(deleteBtn);
+    return row;
+  }
+
+  // Moves a category row up/down in the DOM (direction -1 = up, +1 = down).
+  // The Save Categories handler reads rows in their current DOM order, so
+  // reordering here is all that's needed to change the saved/published order.
+  function moveCategoryRow(row, direction) {
+    if (direction === -1) {
+      const prev = row.previousElementSibling;
+      if (prev) categoriesFieldsContainer.insertBefore(row, prev);
+    } else {
+      const next = row.nextElementSibling;
+      if (next) categoriesFieldsContainer.insertBefore(next, row);
+    }
+    refreshCategoryRowStates();
+  }
+
+  // Disables the up arrow on the first row and the down arrow on the last
+  // row. Call after anything that adds, removes, or reorders rows.
+  function refreshCategoryRowStates() {
+    const rows = Array.from(categoriesFieldsContainer.querySelectorAll('.category-row'));
+    rows.forEach((row, idx) => {
+      const upBtn = row.querySelector('.category-move-up-btn');
+      const downBtn = row.querySelector('.category-move-down-btn');
+      if (upBtn) upBtn.disabled = idx === 0;
+      if (downBtn) downBtn.disabled = idx === rows.length - 1;
+    });
+  }
+
+  function startDeleteConfirm(row) {
+    if (categoriesFieldsContainer.querySelectorAll('.category-row').length <= 1) {
+      showBanner('You need at least one category — add another before deleting this one.', 'error');
+      return;
+    }
+
+    const savedReorder = row.querySelector('.category-row-reorder');
+    const savedField = row.querySelector('.crop-field');
+    const savedDeleteBtn = row.querySelector('.category-row-delete-btn');
+    row.innerHTML = '';
+
+    const confirmWrap = document.createElement('div');
+    confirmWrap.className = 'category-delete-confirm';
+
+    const span = document.createElement('span');
+    span.textContent = 'Type DELETE to confirm:';
+
+    const confirmInput = document.createElement('input');
+    confirmInput.type = 'text';
+    confirmInput.placeholder = 'DELETE';
+    confirmInput.autocomplete = 'off';
+
+    const confirmBtn = document.createElement('button');
+    confirmBtn.type = 'button';
+    confirmBtn.className = 'btn btn-danger btn-sm';
+    confirmBtn.textContent = 'Confirm Delete';
+    confirmBtn.disabled = true;
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.className = 'btn btn-ghost btn-sm';
+    cancelBtn.textContent = 'Cancel';
+
+    confirmInput.addEventListener('input', () => {
+      confirmBtn.disabled = confirmInput.value.trim().toUpperCase() !== 'DELETE';
+    });
+    confirmBtn.addEventListener('click', () => {
+      if (confirmInput.value.trim().toUpperCase() !== 'DELETE') return;
+      row.remove();
+      refreshCategoryRowStates();
+    });
+    cancelBtn.addEventListener('click', () => {
+      row.innerHTML = '';
+      row.appendChild(savedReorder);
+      row.appendChild(savedField);
+      row.appendChild(savedDeleteBtn);
+    });
+
+    confirmWrap.appendChild(span);
+    confirmWrap.appendChild(confirmInput);
+    confirmWrap.appendChild(confirmBtn);
+    confirmWrap.appendChild(cancelBtn);
+    row.appendChild(confirmWrap);
+    confirmInput.focus();
+  }
+
+  function addCategoryRow() {
+    const row = buildCategoryRow('', '');
+    categoriesFieldsContainer.appendChild(row);
+    refreshCategoryRowStates();
+    const input = row.querySelector('.category-label-input');
+    if (input) input.focus();
+  }
+
   function openCategoriesModal() {
     categoriesFieldsContainer.innerHTML = '';
-    VALID_CATEGORY_KEYS.forEach((key) => {
-      const field = document.createElement('label');
-      field.className = 'crop-field';
-      field.textContent = key.charAt(0).toUpperCase() + key.slice(1);
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.dataset.categoryKey = key;
-      input.value = categoryLabels[key];
-      field.appendChild(input);
-      categoriesFieldsContainer.appendChild(field);
+    categoryOrder.forEach((key) => {
+      categoriesFieldsContainer.appendChild(buildCategoryRow(key, categoryLabels[key]));
     });
+    refreshCategoryRowStates();
     categoriesModal.classList.remove('hidden');
   }
 
@@ -566,6 +793,7 @@
     categoriesModal.classList.add('hidden');
   }
 
+  categoriesAddBtn.addEventListener('click', addCategoryRow);
   editCategoriesBtn.addEventListener('click', openCategoriesModal);
   categoriesCloseX.addEventListener('click', closeCategoriesModal);
   categoriesCancelBtn.addEventListener('click', closeCategoriesModal);
@@ -574,17 +802,47 @@
   });
 
   categoriesSaveBtn.addEventListener('click', async () => {
+    const rows = Array.from(categoriesFieldsContainer.querySelectorAll('.category-row'));
+    if (!rows.length) {
+      showBanner('At least one category is required.', 'error');
+      return;
+    }
+
     const updated = {};
+    const keptOriginalKeys = new Set();
+    const takenKeys = new Set();
     let hasError = false;
-    categoriesFieldsContainer.querySelectorAll('input[data-category-key]').forEach((input) => {
-      const value = input.value.trim();
-      if (!value) hasError = true;
-      updated[input.dataset.categoryKey] = value;
+
+    // First pass: keep every existing category's key stable and reserve it,
+    // so a new category's generated slug can never collide with one.
+    rows.forEach((row) => {
+      const originalKey = row.dataset.originalKey;
+      if (originalKey) takenKeys.add(originalKey);
     });
+
+    rows.forEach((row) => {
+      const input = row.querySelector('.category-label-input');
+      const label = input ? input.value.trim() : '';
+      if (!label) { hasError = true; return; }
+
+      const originalKey = row.dataset.originalKey;
+      if (originalKey) {
+        updated[originalKey] = label;
+        keptOriginalKeys.add(originalKey);
+      } else {
+        const key = slugifyCategoryKey(label, takenKeys);
+        takenKeys.add(key);
+        updated[key] = label;
+      }
+    });
+
     if (hasError) {
       showBanner('Every category needs a label.', 'error');
       return;
     }
+
+    const removedKeys = categoryOrder.filter((key) => !keptOriginalKeys.has(key));
+    const fallbackKey = Object.keys(updated)[0];
 
     categoriesSaveBtn.disabled = true;
     categoriesSaveBtn.textContent = 'Saving…';
@@ -596,10 +854,46 @@
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to save categories');
+
       categoryLabels = updated;
+      categoryOrder = Object.keys(updated);
+
+      // Any products that were sitting in a now-deleted category get moved
+      // into the first remaining category instead of silently disappearing.
+      let reassignedCount = 0;
+      if (removedKeys.length) {
+        productsData.forEach((product) => {
+          if (removedKeys.includes(product.category)) {
+            product.category = fallbackKey;
+            reassignedCount++;
+          }
+        });
+        if (reassignedCount) {
+          const prodRes = await fetch('/api/products', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(productsData),
+          });
+          if (!prodRes.ok) {
+            const prodData = await prodRes.json().catch(() => ({}));
+            throw new Error(
+              'Categories saved, but moving ' + reassignedCount +
+              ' product(s) out of the deleted categor' + (reassignedCount === 1 ? 'y' : 'ies') +
+              ' failed: ' + (prodData.error || 'unknown error')
+            );
+          }
+        }
+      }
+
       applyCategoryLabels();
+      renderAll();
       closeCategoriesModal();
-      showBanner('Categories updated — changes are live on the site now.', 'success');
+      showBanner(
+        reassignedCount
+          ? `Categories updated — ${reassignedCount} product(s) moved into "${categoryLabels[fallbackKey]}". Changes are live now.`
+          : 'Categories updated — changes are live on the site now.',
+        'success'
+      );
     } catch (err) {
       showBanner('Could not save categories: ' + err.message, 'error');
     } finally {
@@ -610,10 +904,11 @@
 
   // --- Add product ---
   document.getElementById('add-product-btn').addEventListener('click', () => {
+    const defaultCategory = categoryOrder[0];
     const newProduct = {
       id: nextId++,
       name: '',
-      category: activeCategoryFilter || 'women',
+      category: defaultCategory,
       price: 0,
       oldPrice: null,
       saleTag: null,
@@ -622,8 +917,8 @@
     };
     productsData.push(newProduct);
     renderAll();
-    const cards = container.querySelectorAll('.product-card');
-    const lastCard = cards[cards.length - 1];
+    const section = container.querySelector(`.category-section[data-category-key="${defaultCategory}"]`);
+    const lastCard = section && section.querySelector('.product-card:last-of-type');
     if (lastCard) {
       lastCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
       const nameField = lastCard.querySelector('.p-name-input');

@@ -1221,6 +1221,9 @@ Input, textarea : 14px/1.6 '', Arial, sans-serif;
 
 .rs2-slick1 .item-slick1 {
   height: 100vh;
+  max-height: 760px;
+  min-height: 520px;
+  background-position: center 22%;
 }
 
 @media (max-width: 991px) {

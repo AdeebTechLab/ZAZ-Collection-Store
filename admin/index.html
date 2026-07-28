@@ -17,13 +17,15 @@
   <div id="app" class="app hidden">
     <header class="topbar">
       <div class="topbar-left">
-        <div class="logo-badge">ZAZ</div>
+        <div class="logo-badge"><img src="/images/icons/apple-touch-icon.png" alt="ZAZ Collection"></div>
         <div>
+          <p class="portal-eyebrow">Store Portal</p>
           <h1>Product Manager</h1>
           <p class="signed-in-as">Signed in as <span id="username-label"></span></p>
         </div>
       </div>
       <div class="topbar-right">
+        <button id="edit-categories-btn" class="btn btn-secondary">+ Manage Categories</button>
         <span id="save-status" class="save-status"></span>
         <button id="save-btn" class="btn btn-primary">Save Changes</button>
         <button id="logout-btn" class="btn btn-ghost">Log Out</button>
@@ -33,25 +35,39 @@
     <div id="banner" class="banner hidden"></div>
 
     <main class="main">
+      <div class="dashboard-hero">
+        <div class="dashboard-hero-text">
+          <p class="dashboard-hero-eyebrow">ZAZ Collection</p>
+          <h2>Keep your catalogue fresh.</h2>
+          <p class="dashboard-hero-sub">Update categories, products, prices and photos from one simple dashboard.</p>
+        </div>
+        <div class="dashboard-hero-badge">
+          <p class="badge-title">Live Store</p>
+          <p class="badge-sub">Changes publish after saving</p>
+        </div>
+      </div>
+
       <div class="toolbar">
         <div class="toolbar-left">
           <button id="add-product-btn" class="btn btn-secondary">+ Add Product</button>
-          <select id="category-filter" class="category-filter-select">
-            <option value="">All categories</option>
-            <option value="women">Women</option>
-            <option value="men">Men</option>
-            <option value="bag">Bag</option>
-            <option value="shoes">Shoes</option>
-            <option value="watches">Watches</option>
-          </select>
-          <button id="edit-categories-btn" class="btn btn-secondary">✏️ Edit Categories</button>
         </div>
-        <p class="hint">Edit any field below, then click <strong>Save Changes</strong> to publish it to the live site.</p>
+        <p class="hint">Edit any field, use the <strong>&#9650; &#9660;</strong> arrows to reorder products within a category, then click <strong>Save Changes</strong> to publish it to the live site.</p>
       </div>
 
-      <div id="products-container" class="products-grid"></div>
+      <div id="products-container"></div>
     </main>
   </div>
+
+  <!-- Template for a category section (one per fixed category) -->
+  <template id="category-section-template">
+    <section class="category-section">
+      <div class="category-section-header">
+        <h2 class="category-section-title"></h2>
+        <span class="category-section-count"></span>
+      </div>
+      <div class="category-products-grid"></div>
+    </section>
+  </template>
 
   <!-- Template for a single product card -->
   <template id="product-template">
@@ -62,24 +78,22 @@
           Change Photo
           <input type="file" accept="image/*" class="photo-input">
         </label>
+        <div class="product-order-controls">
+          <button type="button" class="btn-icon move-up-btn" title="Move up" aria-label="Move product up">&#9650;</button>
+          <button type="button" class="btn-icon move-down-btn" title="Move down" aria-label="Move product down">&#9660;</button>
+        </div>
       </div>
       <div class="product-fields">
         <label class="field-label">Name</label>
         <input type="text" class="p-name-input" placeholder="Product name">
 
         <label class="field-label">Category</label>
-        <select class="p-category-input">
-          <option value="women">Women</option>
-          <option value="men">Men</option>
-          <option value="bag">Bag</option>
-          <option value="shoes">Shoes</option>
-          <option value="watches">Watches</option>
-        </select>
+        <select class="p-category-input"></select>
 
         <div class="field-row">
           <div>
             <label class="field-label">Price</label>
-            <label class="price-label">$ <input type="number" class="p-price-input" min="0" step="0.01"></label>
+            <label class="price-label">Rs. <input type="number" class="p-price-input" min="0" step="1"></label>
           </div>
           <div>
             <label class="field-label">Stock</label>
@@ -91,7 +105,7 @@
           <input type="checkbox" class="p-discount-input"> 🏷️ Apply a discount (show old price crossed out)
         </label>
         <div class="field-row discount-row hidden">
-          <label class="price-label discount-price-label">Old Price $ <input type="number" class="p-oldprice-input" min="0" step="0.01"></label>
+          <label class="price-label discount-price-label">Old Price Rs. <input type="number" class="p-oldprice-input" min="0" step="1"></label>
           <div>
             <label class="field-label">Badge Text (auto % off if left blank)</label>
             <input type="text" class="p-saletag-input" placeholder="e.g. 10% Off">
@@ -102,20 +116,21 @@
     </div>
   </template>
 
-  <!-- Categories editor modal: rename the label shown for each fixed
-       category. The underlying key (women/men/bag/shoes/watches) can't be
-       changed here since it's used for filtering & product data on the
-       storefront — only the display text updates. -->
+  <!-- Categories editor modal: rename, add, or delete storefront categories.
+       Deleting requires typing DELETE to confirm since it also reassigns
+       any products in that category to another one. -->
   <div id="categories-modal" class="crop-modal hidden">
     <div class="crop-modal-content">
       <div class="crop-modal-header">
-        <h2>Edit Categories</h2>
+        <h2>Manage Categories</h2>
         <button type="button" id="categories-close-x" class="crop-close-btn" aria-label="Cancel">&times;</button>
       </div>
 
-      <p class="crop-hint">Rename how each category is labeled on the site and in this admin panel. Products stay assigned to the same category — only its display name changes.</p>
+      <p class="crop-hint">Rename, add, delete, or reorder the categories shown on the site and in this admin panel — use the <strong>&#9650; &#9660;</strong> arrows to change the order they appear in. Deleting a category moves its products into another category — you'll need to type <strong>DELETE</strong> to confirm.</p>
 
       <div id="categories-fields" class="categories-fields"></div>
+
+      <button type="button" id="categories-add-btn" class="add-category-btn">+ Add Category</button>
 
       <div class="crop-modal-actions">
         <button type="button" id="categories-cancel-btn" class="btn btn-ghost">Cancel</button>

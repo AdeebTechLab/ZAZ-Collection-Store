@@ -4,11 +4,11 @@ const { getSessionFromRequest, readJsonBody } = require('../lib/auth');
 
 const CATEGORIES_PATHNAME = 'categories-data.json';
 
-// These keys are fixed — they're used as CSS classes for the storefront's
-// isotope filtering (data-filter=".women" etc.) and as the `category` value
-// stored on every product, so they can't be renamed or removed here. Only
-// the human-readable label shown to shoppers/admins can be edited.
-const VALID_KEYS = ['women', 'men', 'bag', 'shoes', 'watches'];
+// Category keys used to be a fixed set of 5. Categories are now fully
+// dynamic — an admin can add or delete them from the Manage Categories
+// modal — so this just validates shape/content generically instead of
+// checking against a hardcoded list.
+const KEY_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 function loadBundledDefault() {
   const filePath = path.join(__dirname, '..', 'data', 'categories-data.json');
@@ -20,15 +20,17 @@ function validateCategories(data) {
   if (!data || typeof data !== 'object' || Array.isArray(data)) {
     return 'Category data must be an object';
   }
-  for (const key of VALID_KEYS) {
-    if (!(key in data)) return `Missing label for category "${key}"`;
+  const keys = Object.keys(data);
+  if (keys.length === 0) {
+    return 'At least one category is required';
+  }
+  for (const key of keys) {
+    if (!KEY_PATTERN.test(key)) {
+      return `Invalid category key "${key}"`;
+    }
     if (typeof data[key] !== 'string' || !data[key].trim()) {
       return `Category "${key}" needs a non-empty label`;
     }
-  }
-  const extraKeys = Object.keys(data).filter((k) => !VALID_KEYS.includes(k));
-  if (extraKeys.length) {
-    return `Unknown category key(s): ${extraKeys.join(', ')}`;
   }
   return null;
 }

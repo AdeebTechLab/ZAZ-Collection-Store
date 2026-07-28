@@ -1,186 +1,186 @@
 [
   {
     "id": 1,
-    "name": "Esprit Ruffle Shirt",
+    "name": "Embroidered Lawn Kurti",
     "category": "women",
-    "price": 16.64,
+    "price": 4500,
     "oldPrice": null,
     "stock": 25,
-    "image": "product-01.jpg"
+    "image": "embroidered-lawn-kurti.jpg"
   },
   {
     "id": 2,
-    "name": "Herschel supply",
+    "name": "Chiffon Party Wear Kurti",
     "category": "women",
-    "price": 35.31,
+    "price": 9800,
     "oldPrice": null,
     "stock": 25,
-    "image": "product-02.jpg"
+    "image": "chiffon-party-wear-kurti.jpg"
   },
   {
     "id": 3,
-    "name": "Only Check Trouser",
+    "name": "Cotton Chino Trouser",
     "category": "men",
-    "price": 25.5,
+    "price": 7000,
     "oldPrice": null,
     "stock": 25,
     "image": "product-03.jpg"
   },
   {
     "id": 4,
-    "name": "Classic Trench Coat",
+    "name": "Wool Blend Trench Coat",
     "category": "women",
-    "price": 75.0,
+    "price": 20900,
     "oldPrice": null,
     "stock": 25,
-    "image": "product-04.jpg"
+    "image": "wool-blend-trench-coat.jpg"
   },
   {
     "id": 5,
-    "name": "Front Pocket Jumper",
+    "name": "Front Pocket Cardigan",
     "category": "women",
-    "price": 34.75,
+    "price": 9700,
     "oldPrice": null,
     "stock": 25,
-    "image": "product-05.jpg"
+    "image": "front-pocket-cardigan.jpg"
   },
   {
     "id": 6,
-    "name": "Vintage Inspired Classic",
+    "name": "Embroidered Party Wear Suit",
     "category": "watches",
-    "price": 93.2,
+    "price": 25900,
     "oldPrice": null,
     "stock": 25,
     "image": "product-06.jpg"
   },
   {
     "id": 7,
-    "name": "Shirt in Stretch Cotton",
+    "name": "Stretch Cotton Kurti",
     "category": "women",
-    "price": 52.66,
+    "price": 14600,
     "oldPrice": null,
     "stock": 25,
-    "image": "product-07.jpg"
+    "image": "stretch-cotton-kurti.jpg"
   },
   {
     "id": 8,
-    "name": "Pieces Metallic Printed",
+    "name": "Metallic Print Chiffon Top",
     "category": "women",
-    "price": 18.96,
+    "price": 5300,
     "oldPrice": null,
     "stock": 25,
-    "image": "product-08.jpg"
+    "image": "metallic-print-chiffon-top.jpg"
   },
   {
     "id": 9,
-    "name": "Converse All Star Hi Plimsolls",
+    "name": "Casual Printed Cotton Co-ord Set",
     "category": "shoes",
-    "price": 75.0,
+    "price": 20900,
     "oldPrice": null,
     "stock": 25,
     "image": "product-09.jpg"
   },
   {
     "id": 10,
-    "name": "Femme T-Shirt In Stripe",
+    "name": "Striped Cotton T-Shirt",
     "category": "women",
-    "price": 25.85,
+    "price": 7200,
     "oldPrice": null,
     "stock": 25,
-    "image": "product-10.jpg"
+    "image": "striped-cotton-tshirt.jpg"
   },
   {
     "id": 11,
-    "name": "Herschel supply",
+    "name": "Cable Knit Wool Sweater",
     "category": "men",
-    "price": 63.16,
+    "price": 17600,
     "oldPrice": null,
     "stock": 25,
     "image": "product-11.jpg"
   },
   {
     "id": 12,
-    "name": "Herschel supply",
+    "name": "Quilted Winter Puffer Jacket",
     "category": "men",
-    "price": 63.15,
+    "price": 17600,
     "oldPrice": null,
     "stock": 25,
     "image": "product-12.jpg"
   },
   {
     "id": 13,
-    "name": "T-Shirt with Sleeve",
+    "name": "Full Sleeve Cotton T-Shirt",
     "category": "women",
-    "price": 18.49,
+    "price": 5100,
     "oldPrice": null,
     "stock": 25,
-    "image": "product-13.jpg"
+    "image": "full-sleeve-cotton-tshirt.jpg"
   },
   {
     "id": 14,
-    "name": "Pretty Little Thing",
+    "name": "Embellished Party Dress",
     "category": "women",
-    "price": 54.79,
+    "price": 15200,
     "oldPrice": null,
     "stock": 25,
-    "image": "product-14.jpg"
+    "image": "embellished-party-dress.jpg"
   },
   {
     "id": 15,
-    "name": "Mini Silver Mesh Watch",
+    "name": "Sequin Embellished Party Gown",
     "category": "watches",
-    "price": 86.85,
+    "price": 24100,
     "oldPrice": null,
     "stock": 25,
     "image": "product-15.jpg"
   },
   {
     "id": 16,
-    "name": "Square Neck Back",
+    "name": "Square Neck Blouse",
     "category": "women",
-    "price": 29.64,
+    "price": 8200,
     "oldPrice": null,
     "stock": 25,
-    "image": "product-16.jpg"
+    "image": "square-neck-blouse.jpg"
   },
   {
     "id": 17,
-    "name": "Long Sleeve T-Shirt",
+    "name": "Long Sleeve Cotton T-Shirt",
     "category": "women",
-    "price": 40.0,
-    "oldPrice": 50.0,
+    "price": 11100,
+    "oldPrice": 13900,
     "stock": 25,
     "image": "long-sleeve-tshirt.jpg",
-    "saleTag": "10% Off"
+    "saleTag": "20% Off"
   },
   {
     "id": 18,
-    "name": "Grey Check Coat",
+    "name": "Grey Check Wool Coat",
     "category": "men",
-    "price": 45.0,
-    "oldPrice": 55.0,
+    "price": 12500,
+    "oldPrice": 15300,
     "stock": 25,
     "image": "grey-check-coat.jpg",
-    "saleTag": "10% Off"
+    "saleTag": "18% Off"
   },
   {
     "id": 19,
     "name": "Silk White Shirt",
     "category": "women",
-    "price": 35.0,
-    "oldPrice": 45.0,
+    "price": 9700,
+    "oldPrice": 12500,
     "stock": 25,
     "image": "silk-white-shirt.jpg",
-    "saleTag": "10% Off"
+    "saleTag": "22% Off"
   },
   {
     "id": 20,
-    "name": "Blue Jeans Pant",
+    "name": "Blue Denim Jeans",
     "category": "men",
-    "price": 35.0,
-    "oldPrice": 45.0,
+    "price": 9700,
+    "oldPrice": 12500,
     "stock": 25,
     "image": "blue-jeans-pant.jpg",
-    "saleTag": "10% Off"
+    "saleTag": "22% Off"
   }
 ]

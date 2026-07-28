@@ -6,13 +6,13 @@
   'use strict';
 
   function imageSrc(image) {
-    if (!image) return 'images/product-01.jpg';
+    if (!image) return 'images/embroidered-lawn-kurti.jpg';
     if (/^https?:\/\//i.test(image) || image.startsWith('data:')) return image;
     return 'images/' + image;
   }
 
   function money(n) {
-    return '$' + Number(n).toFixed(2);
+    return 'Rs. ' + Math.round(Number(n)).toLocaleString('en-US');
   }
 
   function buildCard(product) {
@@ -203,6 +203,42 @@
     );
   }
 
+  // Finds the "Load More" button that belongs to a given grid. The button
+  // lives in its own wrapper div immediately after the grid in the markup,
+  // so it's the grid's next element sibling.
+  function findLoadMoreBtn(grid) {
+    const wrap = grid.nextElementSibling;
+    if (!wrap || !wrap.classList.contains('js-load-more-wrap')) return null;
+    return wrap.querySelector('.js-load-more-btn');
+  }
+
+  // Renders `list` into `grid` in pages of `pageSize` items at a time,
+  // wiring the grid's Load More button (if any) to reveal the next page.
+  // Grids with a data-limit (homepage previews) don't get this — their
+  // Load More button is a plain link to the full shop page instead.
+  async function renderPaged(grid, list, pageSize) {
+    const btn = findLoadMoreBtn(grid);
+    let shown = 0;
+
+    async function showNextPage() {
+      const next = list.slice(shown, shown + pageSize);
+      next.forEach((product) => grid.appendChild(buildCard(product)));
+      shown += next.length;
+      await waitForImages(grid);
+      initIsotope();
+      if (btn) btn.parentElement.style.display = shown >= list.length ? 'none' : '';
+    }
+
+    if (btn) {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        showNextPage();
+      });
+    }
+
+    await showNextPage();
+  }
+
   async function renderGrids() {
     const grids = document.querySelectorAll('.isotope-grid[data-dynamic-products]');
     if (!grids.length) return;
@@ -233,8 +269,15 @@
         continue;
       }
 
-      list.forEach((product) => grid.appendChild(buildCard(product)));
-      await waitForImages(grid);
+      const pageSize = Number(grid.getAttribute('data-page-size'));
+      if (!limit && pageSize) {
+        await renderPaged(grid, list, pageSize);
+      } else {
+        list.forEach((product) => grid.appendChild(buildCard(product)));
+        await waitForImages(grid);
+        // Limited preview grids (e.g. homepage) keep their Load More as a
+        // plain link to the full shop page - nothing to wire up here.
+      }
     }
 
     initIsotope();

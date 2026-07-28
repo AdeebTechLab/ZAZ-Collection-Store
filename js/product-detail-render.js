@@ -6,7 +6,7 @@
   'use strict';
 
   function money(n) {
-    return '$' + Number(n).toFixed(2);
+    return 'Rs. ' + Math.round(Number(n)).toLocaleString('en-US');
   }
 
   function imageSrc(image) {

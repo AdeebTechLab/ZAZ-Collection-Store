@@ -3,7 +3,11 @@ const path = require('path');
 const { getSessionFromRequest, readJsonBody } = require('../lib/auth');
 
 const PRODUCTS_PATHNAME = 'products-data.json';
-const VALID_CATEGORIES = ['women', 'men', 'bag', 'shoes', 'watches'];
+// Categories are now a dynamic, admin-editable set (see api/categories.js),
+// so we can't check product.category against a fixed list here. Just make
+// sure it's a non-empty slug-shaped string; api/categories.js is the single
+// source of truth for which categories actually exist.
+const CATEGORY_KEY_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 function loadBundledDefault() {
   const filePath = path.join(__dirname, '..', 'data', 'products-data.json');
@@ -25,8 +29,8 @@ function validateProducts(data) {
     if (typeof product.name !== 'string' || !product.name.trim()) {
       return `Product ${product.id} needs a non-empty name`;
     }
-    if (!VALID_CATEGORIES.includes(product.category)) {
-      return `Product "${product.name}" needs a valid category (${VALID_CATEGORIES.join(', ')})`;
+    if (typeof product.category !== 'string' || !CATEGORY_KEY_PATTERN.test(product.category)) {
+      return `Product "${product.name}" needs a valid category`;
     }
     if (typeof product.price !== 'number' || Number.isNaN(product.price) || product.price < 0) {
       return `Product "${product.name}" needs a valid non-negative price`;
