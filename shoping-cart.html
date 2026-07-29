@@ -314,19 +314,17 @@
 				<label class="checkout-field-label" for="checkout-phone">Phone Number *</label>
 				<input type="tel" id="checkout-phone" name="phone" class="checkout-input" required autocomplete="tel">
 
-				<label class="checkout-field-label" for="checkout-address">Address *</label>
-				<textarea id="checkout-address" name="address" class="checkout-input checkout-textarea" required autocomplete="street-address" rows="2"></textarea>
-
-				<div class="checkout-field-row">
-					<div>
-						<label class="checkout-field-label" for="checkout-city">City *</label>
-						<input type="text" id="checkout-city" name="city" class="checkout-input" required autocomplete="address-level2">
-					</div>
-					<div>
-						<label class="checkout-field-label" for="checkout-zip">Postal Code</label>
-						<input type="text" id="checkout-zip" name="zip" class="checkout-input" autocomplete="postal-code">
-					</div>
+				<div class="checkout-label-row">
+					<label class="checkout-field-label" for="checkout-address">Address *</label>
+					<button type="button" class="checkout-geo-btn js-checkout-geo-btn">
+						<span class="checkout-geo-icon">📍</span> Use current location
+					</button>
 				</div>
+				<textarea id="checkout-address" name="address" class="checkout-input checkout-textarea" required autocomplete="street-address" rows="2"></textarea>
+				<p class="checkout-geo-status js-checkout-geo-status"></p>
+
+				<label class="checkout-field-label" for="checkout-city">City *</label>
+				<input type="text" id="checkout-city" name="city" class="checkout-input" required autocomplete="address-level2">
 
 				<label class="checkout-field-label" for="checkout-notes">Order Notes (optional)</label>
 				<textarea id="checkout-notes" name="notes" class="checkout-input checkout-textarea" rows="2"></textarea>

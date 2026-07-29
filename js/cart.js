@@ -339,7 +339,6 @@
     lines.push(`Total: ${money(Cart.getTotal())}`);
 
     lines.push('', 'Deliver to:', `Name: ${details.name}`, `Phone: ${details.phone}`, `Address: ${details.address}`, `City: ${details.city}`);
-    if (details.zip) lines.push(`Postal Code: ${details.zip}`);
     if (details.notes) lines.push('', `Notes: ${details.notes}`);
 
     return lines.join('\n');
@@ -427,6 +426,79 @@
       modal.setAttribute('aria-hidden', 'true');
     }
 
+    // "Use current location" — asks the browser for GPS coordinates, then
+    // reverse-geocodes them (via OpenStreetMap's free Nominatim API) into a
+    // human-readable address and drops it into the Address/City fields.
+    const geoBtn = modal.querySelector('.js-checkout-geo-btn');
+    const geoStatus = modal.querySelector('.js-checkout-geo-status');
+    const addressField = form.querySelector('#checkout-address');
+    const cityField = form.querySelector('#checkout-city');
+
+    function setGeoStatus(msg, kind) {
+      if (!geoStatus) return;
+      geoStatus.textContent = msg || '';
+      geoStatus.classList.remove('is-error', 'is-success');
+      if (kind) geoStatus.classList.add(kind);
+    }
+
+    if (geoBtn) {
+      geoBtn.addEventListener('click', () => {
+        if (!('geolocation' in navigator)) {
+          setGeoStatus("Your browser doesn't support location detection. Please type your address.", 'is-error');
+          return;
+        }
+
+        const originalLabel = geoBtn.innerHTML;
+        geoBtn.disabled = true;
+        geoBtn.innerHTML = '<span class="checkout-geo-icon">📍</span> Locating…';
+        setGeoStatus('');
+
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const { latitude, longitude } = position.coords;
+            try {
+              const res = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`,
+                { headers: { Accept: 'application/json' } }
+              );
+              if (!res.ok) throw new Error('Reverse geocoding failed');
+              const data = await res.json();
+              const addr = data.address || {};
+
+              const streetParts = [addr.house_number, addr.road].filter(Boolean).join(' ');
+              const fallbackArea = addr.suburb || addr.neighbourhood || addr.village || '';
+              const addressLine = streetParts || fallbackArea || data.display_name || '';
+              const city = addr.city || addr.town || addr.village || addr.county || '';
+
+              if (addressField && addressLine) addressField.value = addressLine;
+              if (cityField && city) cityField.value = city;
+
+              if (addressLine || city) {
+                setGeoStatus('Location added. Feel free to adjust it if needed.', 'is-success');
+              } else {
+                setGeoStatus("Couldn't determine your address from your location. Please type it in.", 'is-error');
+              }
+            } catch (err) {
+              setGeoStatus("Couldn't look up your address. Please type it in.", 'is-error');
+            } finally {
+              geoBtn.disabled = false;
+              geoBtn.innerHTML = originalLabel;
+            }
+          },
+          (error) => {
+            geoBtn.disabled = false;
+            geoBtn.innerHTML = originalLabel;
+            if (error.code === error.PERMISSION_DENIED) {
+              setGeoStatus('Location access was denied. Please type your address instead.', 'is-error');
+            } else {
+              setGeoStatus("Couldn't get your location. Please type your address instead.", 'is-error');
+            }
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+      });
+    }
+
     document.querySelectorAll('.js-checkout-whatsapp').forEach((btn) => {
       btn.addEventListener('click', async () => {
         const items = readCart();
@@ -485,7 +557,6 @@
         phone: form.querySelector('#checkout-phone').value.trim(),
         address: form.querySelector('#checkout-address').value.trim(),
         city: form.querySelector('#checkout-city').value.trim(),
-        zip: form.querySelector('#checkout-zip').value.trim(),
         notes: form.querySelector('#checkout-notes').value.trim(),
       };
 

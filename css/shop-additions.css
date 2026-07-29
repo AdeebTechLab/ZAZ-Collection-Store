@@ -241,6 +241,55 @@ instead, using the existing column classes with CSS-generated labels. */
 	color: #888;
 	margin-bottom: 6px;
 }
+.checkout-label-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+}
+.checkout-label-row .checkout-field-label {
+	margin-bottom: 6px;
+	flex: none;
+}
+.checkout-geo-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	border: none;
+	background: none;
+	color: #717fe0;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.2px;
+	cursor: pointer;
+	padding: 0 0 6px;
+	white-space: nowrap;
+}
+.checkout-geo-btn:hover {
+	text-decoration: underline;
+}
+.checkout-geo-btn:disabled {
+	opacity: 0.55;
+	cursor: not-allowed;
+	text-decoration: none;
+}
+.checkout-geo-icon {
+	font-size: 12px;
+}
+.checkout-geo-status {
+	margin: -12px 0 16px;
+	font-size: 12px;
+	min-height: 0;
+}
+.checkout-geo-status.is-error {
+	color: #c0392b;
+}
+.checkout-geo-status.is-success {
+	color: #2e8b57;
+}
+.checkout-geo-status:empty {
+	margin: 0;
+}
 .checkout-input {
 	width: 100%;
 	padding: 11px 12px;
@@ -259,14 +308,6 @@ instead, using the existing column classes with CSS-generated labels. */
 }
 .checkout-textarea {
 	min-height: 54px;
-}
-.checkout-field-row {
-	display: flex;
-	gap: 14px;
-}
-.checkout-field-row > div {
-	flex: 1;
-	min-width: 0;
 }
 .checkout-modal-error {
 	display: none;
@@ -294,10 +335,7 @@ instead, using the existing column classes with CSS-generated labels. */
 	.checkout-modal-card {
 		padding: 30px 20px 24px;
 	}
-	.checkout-field-row {
-		flex-direction: column;
-		gap: 0;
-	}
+
 }
 
 /*==================================================================
