@@ -1,0 +1,830 @@
+.out-of-stock-badge {
+	position: absolute;
+	top: 12px;
+	left: 12px;
+	background: rgba(0, 0, 0, 0.75);
+	color: #fff;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.3px;
+	text-transform: uppercase;
+	padding: 5px 10px;
+	border-radius: 3px;
+	z-index: 5;
+}
+
+.js-addcart-detail:disabled,
+.js-addcart-detail.is-disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+/*==================================================================
+[ Cart remove ("x") button ]
+.how-itemcart1 is reused from the theme's product-thumbnail styling,
+which adds a full-size ::after overlay (a hover "quick view" tint) with
+no z-index of its own. Because ::after paints last, it silently sits on
+top of and swallows clicks meant for our remove button underneath it.
+Giving the button an explicit z-index puts it back above that overlay. */
+.js-cart-remove {
+	z-index: 5;
+}
+
+/*==================================================================
+[ Responsive: shopping cart table ]
+The theme's table has a hard min-width of 680px (see .table-shopping-cart
+in main.css) with a horizontal-scroll wrapper, which works but is a poor
+experience on phones — you end up scrolling sideways in a tiny strip to
+see price/quantity/total. Below 680px we reflow it into stacked cards
+instead, using the existing column classes with CSS-generated labels. */
+@media (max-width: 680px) {
+	.wrap-table-shopping-cart {
+		overflow: visible;
+		border: none;
+	}
+	.table-shopping-cart {
+		min-width: 0;
+		width: 100%;
+		display: block;
+	}
+	.table-shopping-cart .table_head {
+		display: none;
+	}
+	.table-shopping-cart tbody,
+	.table-shopping-cart .table_row,
+	.table-shopping-cart td {
+		display: block;
+		width: 100% !important;
+	}
+	.table-shopping-cart .table_row {
+		height: auto;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		padding: 16px 14px;
+		border: 1px solid #e6e6e6;
+		border-radius: 4px;
+		margin-bottom: 12px;
+	}
+	.table-shopping-cart .table_row td {
+		padding: 0 !important;
+	}
+	.table-shopping-cart .column-1 {
+		flex: 0 0 64px;
+		width: 64px !important;
+	}
+	.table-shopping-cart .column-1 img {
+		width: 64px;
+		height: 64px;
+		object-fit: cover;
+	}
+	.table-shopping-cart .column-2 {
+		flex: 1 1 calc(100% - 78px);
+		padding-left: 12px !important;
+		font-weight: 600;
+		align-self: flex-start;
+	}
+	.table-shopping-cart .column-3 {
+		flex: 0 0 50%;
+		margin-top: 12px;
+		font-size: 13px !important;
+		color: #999;
+	}
+	.table-shopping-cart .column-3::before {
+		content: "Price: ";
+		color: #bbb;
+	}
+	.table-shopping-cart .column-4 {
+		flex: 0 0 100%;
+		margin-top: 10px;
+		text-align: left !important;
+	}
+	.table-shopping-cart .column-4 .wrap-num-product {
+		margin-left: 0 !important;
+	}
+	.table-shopping-cart .column-5 {
+		flex: 0 0 50%;
+		margin-top: 12px;
+		padding: 0 !important;
+		text-align: right !important;
+		font-weight: 700;
+	}
+	.table-shopping-cart .column-5::before {
+		content: "Total: ";
+		font-weight: 400;
+		color: #bbb;
+	}
+	/* The "your cart is empty" row spans all columns — don't apply the
+	   per-column flex rules to it. */
+	.table-shopping-cart tr.cart-empty-row {
+		display: block;
+	}
+	.table-shopping-cart tr.cart-empty-row td {
+		text-align: center;
+	}
+}
+
+/*==================================================================
+[ Checkout details modal ]*/
+.checkout-modal {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 2000;
+	display: none;
+	align-items: center;
+	justify-content: center;
+	padding: 20px;
+}
+.checkout-modal.show-checkout-modal {
+	display: flex;
+}
+.checkout-modal-overlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: rgba(0, 0, 0, 0.6);
+}
+.checkout-modal-card {
+	position: relative;
+	background: #fff;
+	width: 100%;
+	max-width: 440px;
+	max-height: 90vh;
+	overflow-y: auto;
+	padding: 36px 30px 30px;
+	border-radius: 2px;
+}
+.checkout-modal-close {
+	position: absolute;
+	top: 14px;
+	right: 14px;
+	width: 26px;
+	height: 26px;
+	border: none;
+	background: transparent;
+	cursor: pointer;
+	opacity: 0.6;
+	transition: opacity 0.3s;
+}
+.checkout-modal-close:hover {
+	opacity: 1;
+}
+.checkout-modal-close img {
+	width: 100%;
+	height: 100%;
+}
+.checkout-modal-title {
+	font-family: PlayfairDisplay-Bold, serif;
+	font-size: 22px;
+	color: #222;
+	margin: 0 0 6px;
+}
+.checkout-modal-subtitle {
+	font-size: 13px;
+	color: #888;
+	margin: 0 0 22px;
+}
+.checkout-field-label {
+	display: block;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.4px;
+	color: #888;
+	margin-bottom: 6px;
+}
+.checkout-input {
+	width: 100%;
+	padding: 11px 12px;
+	border: 1px solid #e2e2e2;
+	background: #fafafa;
+	font-size: 14px;
+	color: #222;
+	margin-bottom: 16px;
+	resize: vertical;
+	font-family: inherit;
+}
+.checkout-input:focus {
+	outline: none;
+	border-color: #717fe0;
+	background: #fff;
+}
+.checkout-textarea {
+	min-height: 54px;
+}
+.checkout-field-row {
+	display: flex;
+	gap: 14px;
+}
+.checkout-field-row > div {
+	flex: 1;
+	min-width: 0;
+}
+.checkout-modal-error {
+	display: none;
+	background: #fdecea;
+	color: #c0392b;
+	border-left: 3px solid #c0392b;
+	padding: 10px 12px;
+	font-size: 13px;
+	margin-bottom: 16px;
+}
+.checkout-modal-error.show {
+	display: block;
+}
+.checkout-submit-btn {
+	width: 100%;
+	border: none;
+}
+.checkout-submit-btn:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+/* Phones */
+@media (max-width: 480px) {
+	.checkout-modal-card {
+		padding: 30px 20px 24px;
+	}
+	.checkout-field-row {
+		flex-direction: column;
+		gap: 0;
+	}
+}
+
+/*==================================================================
+[ Features bar — trust badges under the hero banners on the homepage ]*/
+.features-bar {
+	display: flex;
+	flex-wrap: wrap;
+	padding: 34px 0;
+}
+.features-item {
+	flex: 1 1 25%;
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	padding: 10px 20px;
+}
+.features-icon {
+	flex: 0 0 auto;
+	width: 46px;
+	height: 46px;
+	border-radius: 50%;
+	background: rgba(113, 127, 224, 0.12);
+	color: #717fe0;
+	font-size: 20px;
+}
+.features-txt h5 {
+	margin: 0 0 4px;
+}
+.features-txt p {
+	margin: 0;
+}
+
+@media (max-width: 991px) {
+	.features-item { flex: 1 1 50%; }
+}
+@media (max-width: 575px) {
+	.features-item { flex: 1 1 100%; }
+	.features-bar { padding: 22px 0; }
+}
+
+/*==================================================================
+[ Flash Sales carousel — homepage ]*/
+.flash-sales-track {
+	margin: 0 -12px;
+}
+.flash-sale-item {
+	display: block;
+	padding: 0 12px;
+}
+.flash-sale-pic {
+	display: block;
+	position: relative;
+	overflow: hidden;
+	border: 1px solid #e6e6e6;
+	margin-bottom: 14px;
+}
+.flash-sale-pic::before {
+	content: "";
+	display: block;
+	padding-top: 133%; /* 3:4 ratio, via the classic box-ratio technique for
+	                       maximum browser compatibility (vs. aspect-ratio) */
+}
+.flash-sale-pic img {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+	transition: transform 0.4s;
+}
+.flash-sale-pic:hover img {
+	transform: scale(1.05);
+}
+.flash-sale-pic:hover .block2-btn {
+	bottom: 20px;
+}
+.flash-sale-badge {
+	position: absolute;
+	top: 14px;
+	left: 14px;
+	background: #717fe0;
+	color: #fff;
+	font-family: Poppins-Medium;
+	font-size: 12px;
+	padding: 5px 12px;
+}
+.flash-sale-name {
+	display: block;
+	font-family: Poppins-SemiBold;
+	font-size: 16px;
+	color: #222;
+	margin-bottom: 6px;
+}
+.flash-sale-name:hover {
+	color: #717fe0;
+}
+.flash-sale-price {
+	font-family: Poppins-Medium;
+	font-size: 16px;
+}
+.flash-sale-oldprice {
+	color: #aaa;
+	text-decoration: line-through;
+	margin-right: 8px;
+	font-size: 14px;
+}
+.flash-sale-newprice {
+	color: #717fe0;
+}
+
+/* Slick ships without slick-theme.css in this project (the theme styles
+   its other sliders with custom arrow/dot markup instead), so the default
+   dots render unstyled. Style them to match the brand accent. */
+.flash-sales-track .slick-dots {
+	list-style: none;
+	display: flex;
+	justify-content: center;
+	gap: 8px;
+	padding: 28px 0 0;
+	margin: 0;
+}
+.flash-sales-track .slick-dots li button {
+	width: 8px;
+	height: 8px;
+	padding: 0;
+	border: none;
+	border-radius: 50%;
+	background: #ddd;
+	color: transparent;
+	font-size: 0;
+	cursor: pointer;
+}
+.flash-sales-track .slick-dots li.slick-active button {
+	background: #717fe0;
+}
+
+/*==================================================================
+[ Deal Of The Week — sale page hero ]*/
+.deal-week-section {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: stretch;
+	background: #f4f4f4;
+	min-height: 560px;
+}
+.deal-week-pic {
+	flex: 0 0 50%;
+	max-width: 50%;
+	overflow: hidden;
+}
+.deal-week-pic img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	min-height: 560px;
+	object-fit: cover;
+	object-position: top center;
+}
+.deal-week-content {
+	flex: 0 0 50%;
+	max-width: 50%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	padding: 40px 20px;
+}
+.deal-week-title {
+	font-family: Poppins-Bold;
+	font-size: 40px;
+	color: #262626;
+	margin: 0;
+}
+.deal-week-divider {
+	width: 50px;
+	height: 3px;
+	background: #717fe0;
+	margin: 18px 0 40px;
+}
+.deal-week-countdown {
+	gap: 18px;
+	margin-bottom: 40px;
+}
+.deal-week-time-item {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+.deal-week-time-circle {
+	width: 110px;
+	height: 110px;
+	border-radius: 50%;
+	background: #fff;
+	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-bottom: 12px;
+}
+.deal-week-time-num {
+	font-family: Poppins-Bold;
+	font-size: 34px;
+	color: #717fe0;
+	line-height: 1;
+}
+.deal-week-time-label {
+	font-family: Poppins-Regular, sans-serif;
+	font-size: 15px;
+	color: #333;
+}
+.deal-week-btn {
+	display: inline-block;
+	background: #1a1a1a;
+	color: #fff;
+	font-family: Poppins-SemiBold;
+	font-size: 13px;
+	letter-spacing: 0.5px;
+	text-transform: uppercase;
+	padding: 17px 42px;
+	transition: background 0.3s;
+}
+.deal-week-btn:hover {
+	background: #717fe0;
+	color: #fff;
+}
+
+.hero-features-divider {
+	width: 100%;
+	height: 40px;
+	background: #fff;
+}
+
+@media (max-width: 991px) {
+	.deal-week-section { min-height: 0; }
+	.deal-week-pic, .deal-week-content {
+		flex: 0 0 100%;
+		max-width: 100%;
+	}
+	.deal-week-pic img { min-height: 320px; }
+	.deal-week-content { padding: 50px 20px; }
+	.deal-week-title { font-size: 32px; }
+}
+@media (max-width: 575px) {
+	.hero-features-divider { height: 24px; }
+}
+@media (max-width: 575px) {
+	.deal-week-time-circle { width: 84px; height: 84px; }
+	.deal-week-time-num { font-size: 26px; }
+	.deal-week-countdown { gap: 10px; }
+	.deal-week-btn { padding: 15px 32px; }
+}
+
+/*==================================================================
+[ Features bar — card variant used on the sale page hero ]
+Same markup/classes as the homepage features bar, but styled as
+separated light-grey cards with red outlined icons, matching the
+sale page's red accent instead of the homepage's blue-tinted icons. */
+.features-bar--cards {
+	gap: 2px;
+	background: #fff;
+	padding: 0;
+}
+.features-bar--cards .features-item {
+	flex: 1 1 calc(25% - 1.5px);
+	background: #f5f5f5;
+	padding: 30px 26px;
+	gap: 18px;
+}
+.features-bar--cards .features-icon {
+	width: 56px;
+	height: 56px;
+	background: transparent;
+	border: 2px solid #717fe0;
+	color: #717fe0;
+	font-size: 22px;
+}
+.features-bar--cards .features-txt h5 {
+	font-family: Poppins-SemiBold;
+	font-size: 14px;
+	letter-spacing: 0.3px;
+	text-transform: uppercase;
+	color: #262626;
+}
+.features-bar--cards .features-txt p {
+	font-size: 13px;
+	color: #888;
+}
+
+@media (max-width: 991px) {
+	.features-bar--cards .features-item { flex: 1 1 calc(50% - 1px); }
+}
+@media (max-width: 575px) {
+	.features-bar--cards .features-item { flex: 1 1 100%; }
+}
+
+/*==================================================================
+	COLLECTION BANNERS (sales.html)
+==================================================================*/
+.coll-banner-gap { margin-bottom: 30px; }
+
+.coll-banner {
+	position: relative;
+	overflow: hidden;
+	border-radius: 6px;
+	background: #f2f2f2;
+}
+
+/* Large split banner: photo on one side, text panel on the other */
+.coll-banner-split {
+	display: flex;
+	flex-wrap: wrap;
+	min-height: 480px;
+}
+.coll-banner-split .coll-banner-media {
+	flex: 1 1 55%;
+	min-height: 260px;
+	overflow: hidden;
+}
+.coll-banner-split .coll-banner-media img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+.coll-banner-split .coll-banner-body {
+	flex: 1 1 45%;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	padding: 40px 46px;
+}
+
+/* Small overlay banners: photo fills the card, text sits on top */
+.coll-banner-overlay {
+	min-height: 225px;
+	height: 100%;
+}
+.coll-banner-overlay img {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+.coll-banner-overlay-txt {
+	position: relative;
+	z-index: 2;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	padding: 30px 34px;
+	max-width: 62%;
+}
+
+.coll-banner-label {
+	display: block;
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	font-size: 12.5px;
+	margin-bottom: 10px;
+}
+.coll-banner-title {
+	font-family: Poppins-Bold;
+	font-size: 34px;
+	line-height: 1.15;
+	color: #222;
+	margin: 0 0 14px;
+}
+.coll-banner-title-sm { font-size: 25px; margin-bottom: 12px; }
+.coll-banner-desc {
+	margin: 0 0 22px;
+	max-width: 320px;
+}
+.coll-banner-link {
+	font-family: Poppins-SemiBold;
+	font-size: 14px;
+	color: #222;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+.coll-banner-link i { font-size: 12px; transition: transform 0.25s; }
+.coll-banner-link:hover { color: #717fe0; }
+.coll-banner-link:hover i { transform: translateX(4px); }
+
+@media (max-width: 991px) {
+	.coll-banner-split { min-height: 0; }
+	.coll-banner-split .coll-banner-media { flex: 1 1 100%; min-height: 300px; }
+	.coll-banner-split .coll-banner-body { flex: 1 1 100%; padding: 30px 28px; }
+	.coll-banner-overlay { min-height: 260px; }
+	.coll-banner-overlay-txt { max-width: 75%; }
+}
+@media (max-width: 575px) {
+	.coll-banner-title { font-size: 27px; }
+	.coll-banner-overlay-txt { max-width: 85%; padding: 24px; }
+}
+
+/*==================================================================
+[ Shop search bar ]
+Replaces the old "Filter" / "Search" toggle buttons + slide-down
+search/filter panels with a single always-visible, always-usable
+search field. Live filtering + relevance sorting is wired up in
+js/shop-search.js — it targets .js-shop-search / .isotope-item /
+.js-name-b2, all already present in the product grid markup. */
+.shop-search-wrap {
+	position: relative;
+	width: 100%;
+	max-width: 360px;
+	margin-left: auto;
+}
+.shop-search-icon {
+	position: absolute;
+	top: 50%;
+	left: 18px;
+	transform: translateY(-50%);
+	font-size: 17px;
+	color: #999;
+	pointer-events: none;
+	transition: color 0.25s;
+}
+.shop-search-input {
+	width: 100%;
+	height: 48px;
+	padding: 0 42px 0 44px;
+	border: 1px solid #e5e5e5;
+	border-radius: 24px;
+	background-color: #fff;
+	font-family: Poppins-Regular;
+	font-size: 14px;
+	color: #222;
+	transition: border-color 0.25s, box-shadow 0.25s;
+}
+.shop-search-input::placeholder {
+	color: #adadad;
+}
+.shop-search-input:hover {
+	border-color: #c9c9c9;
+}
+.shop-search-input:focus {
+	outline: none;
+	border-color: #6c7ae0;
+	box-shadow: 0 0 0 3px rgba(108, 122, 224, 0.15);
+}
+.shop-search-input:focus ~ .shop-search-icon {
+	color: #6c7ae0;
+}
+.shop-search-clear {
+	position: absolute;
+	top: 50%;
+	right: 10px;
+	transform: translateY(-50%);
+	width: 26px;
+	height: 26px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	color: #b2b2b2;
+	font-size: 11px;
+	background: transparent;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.2s, background-color 0.2s, color 0.2s;
+}
+.shop-search-input:not(:placeholder-shown) ~ .shop-search-clear {
+	opacity: 1;
+	pointer-events: auto;
+}
+.shop-search-clear:hover {
+	background-color: #f2f2f2;
+	color: #666;
+}
+
+/* No-results state, shown by shop-search.js when a search term matches
+   nothing in the currently loaded grid. */
+.shop-search-empty {
+	width: 100%;
+	text-align: center;
+	padding: 60px 20px;
+	color: #999;
+	font-family: Poppins-Regular;
+	font-size: 15px;
+}
+
+@media (max-width: 575px) {
+	.shop-search-wrap {
+		max-width: 100%;
+		margin-left: 0;
+	}
+}
+
+/*==================================================================
+[ Wishlist ]
+Colors in the "Add to Wishlist" heart on the product-detail page /
+Quick View modal once js/wishlist.js has added that product — the
+grid-card heart's own filled/outline swap is already handled by the
+theme's existing .js-addedwish-b2 rule in main.css. */
+.js-addwish-detail.is-added-wish {
+	color: #717fe0;
+}
+
+/*==================================================================
+[ Contact page: "Send Us A Message" form ]
+The theme's icon-email.png image is sized/positioned by .how-pos4;
+the Name field uses a linearicons glyph instead of an image, so it
+needs its own font-size/color to sit at roughly the same visual
+weight and position. contact-whatsapp.js drives the actual submit
+behavior (builds a wa.me link instead of posting anywhere). */
+.contact-form-icon {
+	font-size: 16px;
+	color: #999;
+	line-height: 1;
+}
+.contact-form-msg {
+	display: none;
+	padding: 10px 12px;
+	font-size: 13px;
+	margin-bottom: 18px;
+	border-left: 3px solid transparent;
+}
+.contact-form-msg.show {
+	display: block;
+}
+.contact-form-msg.is-error {
+	background: #fdecea;
+	color: #c0392b;
+	border-left-color: #c0392b;
+}
+.contact-form-msg.is-success {
+	background: #eaf7ec;
+	color: #2e7d32;
+	border-left-color: #2e7d32;
+}
+
+/*==================================================================
+[ Footer: brand logo column ]
+Replaces the theme's default "Newsletter" signup column with the
+site's actual logo (same file used in the header), so the footer
+reinforces the brand instead of asking for an email a second time.
+Sized with max-width instead of a fixed width so it shrinks cleanly
+on narrow screens — the column itself already stacks responsively
+via the shared col-sm-6 col-lg-3 grid classes used by every other
+footer column. */
+.footer-logo-col {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+}
+.footer-logo-col .footer-logo-img {
+	max-width: 160px;
+	width: 100%;
+	height: auto;
+	margin-bottom: 18px;
+}
+.footer-logo-col .footer-logo-tagline {
+	max-width: 240px;
+}
+@media (max-width: 575px) {
+	.footer-logo-col {
+		align-items: center;
+		text-align: center;
+	}
+	.footer-logo-col .footer-logo-img {
+		max-width: 130px;
+		margin-left: auto;
+		margin-right: auto;
+	}
+}
