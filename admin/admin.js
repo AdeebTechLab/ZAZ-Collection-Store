@@ -163,6 +163,18 @@
       const res = await fetch('/api/products', { cache: 'no-store' });
       if (!res.ok) throw new Error('Failed to load products (status ' + res.status + ')');
       productsData = await res.json();
+      productsData.forEach((p) => {
+        // Older saved products used a numeric `stock` quantity — migrate
+        // that to the new simple inStock boolean the first time they're
+        // loaded here, so they don't fail validation until someone happens
+        // to touch the toggle.
+        if (typeof p.inStock !== 'boolean') {
+          p.inStock = typeof p.stock === 'number' ? p.stock > 0 : true;
+        }
+        delete p.stock;
+        if (!Array.isArray(p.sizes)) p.sizes = [];
+        if (!Array.isArray(p.colors)) p.colors = [];
+      });
       computeNextId();
       renderAll();
     } catch (err) {
@@ -266,6 +278,64 @@
     renderAll();
   }
 
+  // Drives one of a product card's Sizes / Colors chip editors. `field` is
+  // 'sizes' or 'colors' on the product object (an array of strings). Renders
+  // the current values as removable chips and wires the adjacent text
+  // input + "+ Add" button (plus Enter-to-add) to push new values in,
+  // de-duping case-insensitively so "Red" and "red" don't both get added.
+  const variantChipTemplate = document.getElementById('variant-chip-template');
+
+  function wireVariantList(node, product, field, listSelector, addInputSelector, addBtnSelector) {
+    const list = node.querySelector(listSelector);
+    const addInput = node.querySelector(addInputSelector);
+    const addBtn = node.querySelector(addBtnSelector);
+    if (!Array.isArray(product[field])) product[field] = [];
+
+    function renderChips() {
+      list.innerHTML = '';
+      if (!product[field].length) {
+        const empty = document.createElement('span');
+        empty.className = 'variant-chip-empty';
+        empty.textContent = 'None added yet';
+        list.appendChild(empty);
+        return;
+      }
+      product[field].forEach((value, idx) => {
+        const chip = variantChipTemplate.content.firstElementChild.cloneNode(true);
+        chip.querySelector('.variant-chip-label').textContent = value;
+        chip.querySelector('.variant-chip-remove').addEventListener('click', () => {
+          product[field].splice(idx, 1);
+          renderChips();
+        });
+        list.appendChild(chip);
+      });
+    }
+
+    function addValue() {
+      const raw = addInput.value.trim();
+      if (!raw) return;
+      // Support comma-separated bulk entry (e.g. "S, M, L") in one go.
+      const incoming = raw.split(',').map((v) => v.trim()).filter(Boolean);
+      incoming.forEach((value) => {
+        const exists = product[field].some((v) => v.toLowerCase() === value.toLowerCase());
+        if (!exists) product[field].push(value);
+      });
+      addInput.value = '';
+      renderChips();
+      addInput.focus();
+    }
+
+    addBtn.addEventListener('click', addValue);
+    addInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addValue();
+      }
+    });
+
+    renderChips();
+  }
+
   function renderProduct(product, isFirst, isLast) {
     const node = productTemplate.content.firstElementChild.cloneNode(true);
     const img = node.querySelector('.product-photo-img');
@@ -273,7 +343,7 @@
     const nameInput = node.querySelector('.p-name-input');
     const categoryInput = node.querySelector('.p-category-input');
     const priceInput = node.querySelector('.p-price-input');
-    const stockInput = node.querySelector('.p-stock-input');
+    const inStockInput = node.querySelector('.p-instock-input');
     const discountInput = node.querySelector('.p-discount-input');
     const discountRow = node.querySelector('.discount-row');
     const oldPriceInput = node.querySelector('.p-oldprice-input');
@@ -292,7 +362,7 @@
     nameInput.value = product.name || '';
     categoryInput.value = product.category || categoryOrder[0];
     priceInput.value = product.price != null ? product.price : '';
-    stockInput.value = product.stock != null ? product.stock : 0;
+    inStockInput.checked = product.inStock !== false;
     discountInput.checked = product.oldPrice != null;
     oldPriceInput.value = product.oldPrice != null ? product.oldPrice : '';
     saleTagInput.value = product.saleTag || '';
@@ -324,9 +394,8 @@
       product.price = Number.isNaN(v) ? 0 : v;
       updateAutoBadgePlaceholder();
     });
-    stockInput.addEventListener('input', () => {
-      const v = parseInt(stockInput.value, 10);
-      product.stock = Number.isNaN(v) ? 0 : v;
+    inStockInput.addEventListener('change', () => {
+      product.inStock = !!inStockInput.checked;
     });
     discountInput.addEventListener('change', () => {
       discountRow.classList.toggle('hidden', !discountInput.checked);
@@ -352,6 +421,9 @@
     saleTagInput.addEventListener('input', () => {
       product.saleTag = saleTagInput.value.trim() || null;
     });
+
+    wireVariantList(node, product, 'sizes', '.p-size-list', '.p-size-add-input', '.p-size-add-btn');
+    wireVariantList(node, product, 'colors', '.p-color-list', '.p-color-add-input', '.p-color-add-btn');
 
     photoInput.addEventListener('change', async () => {
       const file = photoInput.files[0];
@@ -1116,7 +1188,9 @@
       price: 0,
       oldPrice: null,
       saleTag: null,
-      stock: 0,
+      inStock: true,
+      sizes: [],
+      colors: [],
       image: '',
     };
     productsData.push(newProduct);
@@ -1174,8 +1248,8 @@
       if (product.price == null || Number.isNaN(product.price) || product.price < 0) {
         return `"${product.name}" needs a valid price.`;
       }
-      if (product.stock == null || Number.isNaN(product.stock) || product.stock < 0) {
-        return `"${product.name}" needs a valid stock quantity.`;
+      if (typeof product.inStock !== 'boolean') {
+        return `"${product.name}" needs a valid stock status.`;
       }
       if (product.oldPrice != null) {
         if (Number.isNaN(product.oldPrice) || product.oldPrice < 0) {

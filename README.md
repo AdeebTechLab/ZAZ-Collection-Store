@@ -51,22 +51,16 @@ Done — the admin panel can now save products/categories to Blob storage.
 | `ADMIN_USERNAME` | e.g. `admin` |
 | `ADMIN_PASSWORD` | a strong password |
 | `SESSION_SECRET` | a long random string (see below) |
-| `GOOGLE_MAPS_API_KEY` | optional — powers the map on `contact.html` (see below) |
 
 **Generate `SESSION_SECRET`:**
 - Node: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
 - Git Bash / OpenSSL: `openssl rand -hex 32`
 - Or any password generator, 40+ random characters
 
-**`GOOGLE_MAPS_API_KEY`:** create one at [console.cloud.google.com](https://console.cloud.google.com/)
-→ enable the **Maps JavaScript API** → **Credentials → Create API key**. Then, on that key,
-click **Restrict key** and set:
-- *Application restrictions* → **Websites** → add your `*.vercel.app` domain and any custom domain
-- *API restrictions* → **Restrict key** → select only **Maps JavaScript API**
-
-This limits the key to only working on your site, so it can't be reused elsewhere even though
-it's visible in the page once the map loads (that part is unavoidable for any client-side Maps
-embed). If this variable is left unset, `contact.html` just shows no map instead of breaking.
+The map on `contact.html` is a plain Google Maps iframe embed (`google.com/maps?...&output=embed`),
+so it needs no API key, no Google Cloud project, and no environment variable — it just works.
+To update the pinned location, edit the `q=<lat>,<lng>` value in that iframe's `src` in
+`contact.html`.
 
 Then **Deployments → ⋯ → Redeploy** so the functions pick up the new variables.
 

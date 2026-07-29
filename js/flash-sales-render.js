@@ -70,7 +70,7 @@
         price: Number(item.getAttribute('data-price')),
         oldPrice: Number(item.getAttribute('data-old-price')),
         image: item.getAttribute('data-image'),
-        stock: Number(item.getAttribute('data-stock') || 1),
+        inStock: item.getAttribute('data-in-stock') !== 'false',
       };
       btn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -130,7 +130,11 @@
       return;
     }
 
-    const onSale = products.filter((p) => p.oldPrice != null && p.oldPrice > p.price);
+    // The "% Off" badge is a sale promotion for something a customer can
+    // actually buy right now, so an out-of-stock product — even with a
+    // discount configured — is left out of this carousel entirely instead
+    // of showing a misleading "X% Off" badge on something they can't order.
+    const onSale = products.filter((p) => p.oldPrice != null && p.oldPrice > p.price && p.inStock !== false);
     if (!onSale.length) {
       section.style.display = 'none';
       return;

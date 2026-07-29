@@ -338,7 +338,7 @@ body {
   padding: 30px 0;
 }
 .p-category-input, .p-name-input, .p-price-input,
-.p-stock-input, .p-oldprice-input {
+.p-oldprice-input {
   padding: 10px 11px;
   border-radius: 6px;
   border: 1px solid var(--border-dark);
@@ -449,6 +449,112 @@ body {
 }
 .checkbox-label input[type="checkbox"] { width: auto; accent-color: var(--brand); }
 .discount-row { grid-template-columns: 1fr; }
+
+/* --- In Stock / Out of Stock toggle ---
+   A simple checkbox styled as a checkmark pill: checked = green "In Stock",
+   unchecked = red "Out of Stock". Replaces the old numeric stock-quantity
+   field — admins no longer track counts, just whether it can be ordered. */
+.stock-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  padding: 9px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-dark);
+  background: var(--danger-bg);
+  transition: background 0.2s, border-color 0.2s;
+}
+.stock-toggle-label input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.stock-toggle-box {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 1.5px solid var(--danger);
+  color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  line-height: 1;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.stock-toggle-text {
+  font-family: Poppins-Regular, sans-serif;
+  font-size: 13px;
+  color: var(--danger);
+}
+.stock-toggle-text::before { content: "Out of Stock"; }
+.stock-toggle-label input:checked ~ .stock-toggle-box {
+  background: var(--success);
+  border-color: var(--success);
+  color: #fff;
+}
+.stock-toggle-label:has(input:checked) {
+  background: #eaf7ec;
+  border-color: var(--success);
+}
+.stock-toggle-label input:checked ~ .stock-toggle-text {
+  color: #2e7d32;
+}
+.stock-toggle-label input:checked ~ .stock-toggle-text::before { content: "In Stock"; }
+
+/* --- Sizes / Colors chip editors --- */
+.variant-editor { margin-top: 4px; }
+.variant-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 30px;
+  padding: 6px 0 2px;
+}
+.variant-chip-empty {
+  font-family: Poppins-Regular, sans-serif;
+  font-size: 12px;
+  color: var(--muted);
+  font-style: italic;
+  padding: 4px 0;
+}
+.variant-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #eef0fd;
+  color: var(--brand-dark);
+  border: 1px solid #d7dbf8;
+  border-radius: 999px;
+  padding: 4px 6px 4px 12px;
+  font-family: Poppins-Regular, sans-serif;
+  font-size: 12.5px;
+}
+.variant-chip-remove {
+  border: none;
+  background: rgba(0,0,0,0.08);
+  color: var(--text);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  line-height: 1;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.variant-chip-remove:hover { background: var(--danger); color: #fff; }
+.variant-add-row {
+  display: flex;
+  gap: 6px;
+}
+.variant-add-row input[type="text"] { flex: 1; }
+.variant-add-btn { white-space: nowrap; }
 
 .delete-product-btn { align-self: flex-start; }
 

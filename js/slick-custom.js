@@ -88,6 +88,48 @@
         });
 
         /*==================================================================
+        [ Slick1 mobile — homepage hero, phones only ]
+        Independent instance from Slick1 above: portrait photos instead of
+        background-image banners, so the model isn't cropped out on a
+        narrow screen. Simpler than Slick1 (no staggered text layers) since
+        the CTA button is just plain markup inside each slide. */
+        $('.wrap-slick-mobile-hero').each(function(){
+            var wrap = $(this);
+            $(wrap).find('.slick-mobile-hero').slick({
+                slidesToShow: 1,
+                slidesToScroll: 1,
+                fade: true,
+                speed: 800,
+                infinite: true,
+                autoplay: true,
+                autoplaySpeed: 4500,
+                pauseOnFocus: false,
+                pauseOnHover: false,
+                arrows: false,
+                dots: true,
+                appendDots: wrap,
+                dotsClass: 'slick-mobile-hero-dots',
+            });
+        });
+
+        // Both hero sliders above can be initialized while CSS has them
+        // display:none (whichever one doesn't match the current
+        // breakpoint), which makes slick measure a 0px-wide container. If
+        // someone resizes an open browser across the 767px breakpoint
+        // instead of loading fresh on a phone, recalculate positions once
+        // the now-visible slider actually has real width to measure.
+        var heroResizeTimer;
+        $(window).on('resize', function(){
+            clearTimeout(heroResizeTimer);
+            heroResizeTimer = setTimeout(function(){
+                var $slick1 = $('.wrap-slick1 .slick1');
+                var $slickMobileHero = $('.wrap-slick-mobile-hero .slick-mobile-hero');
+                if ($slick1.hasClass('slick-initialized')) $slick1.slick('setPosition');
+                if ($slickMobileHero.hasClass('slick-initialized')) $slickMobileHero.slick('setPosition');
+            }, 200);
+        });
+
+        /*==================================================================
         [ Slick2 ]*/
         $('.wrap-slick2').each(function(){
             $(this).find('.slick2').slick({

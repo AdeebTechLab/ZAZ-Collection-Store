@@ -268,6 +268,36 @@
 		</div>
 	</section>
 
+	<!-- Mobile-only hero slider: the desktop slides above are wide banner
+	     shots cropped with background-size:cover, which on a narrow phone
+	     screen cuts off the model entirely. These portrait photos are
+	     framed for mobile instead, and this section only shows up there —
+	     see .section-slide-mobile in css/shop-additions.css. -->
+	<section class="section-slide-mobile">
+		<div class="wrap-slick-mobile-hero">
+			<div class="slick-mobile-hero">
+				<div class="item-slick-mobile-hero">
+					<img src="images/mobile-slide-01.webp" alt="ZAZ Collection — mustard embroidered suit">
+					<div class="mobile-hero-cta">
+						<a href="product.html" class="flex-c-m stext-101 cl0 size-101 bg1 bor1 hov-btn1 p-lr-15 trans-04">Shop Now</a>
+					</div>
+				</div>
+				<div class="item-slick-mobile-hero">
+					<img src="images/mobile-slide-02.webp" alt="ZAZ Collection — rani pink sharara set">
+					<div class="mobile-hero-cta">
+						<a href="product.html" class="flex-c-m stext-101 cl0 size-101 bg1 bor1 hov-btn1 p-lr-15 trans-04">Shop Now</a>
+					</div>
+				</div>
+				<div class="item-slick-mobile-hero">
+					<img src="images/mobile-slide-03.webp" alt="ZAZ Collection — maroon embellished suit">
+					<div class="mobile-hero-cta">
+						<a href="product.html" class="flex-c-m stext-101 cl0 size-101 bg1 bor1 hov-btn1 p-lr-15 trans-04">Shop Now</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
 
 	<!-- Deal Of The Week -->
 	<section class="deal-week-section">
@@ -369,7 +399,7 @@
 				</h3>
 			</div>
 			<div class="flash-sales-track" data-flash-sales>
-				<div class="flash-sale-item" data-id="17" data-name="Long Sleeve Cotton T-Shirt" data-price="40.00" data-old-price="50.00" data-image="images/long-sleeve-tshirt.webp" data-stock="1">
+				<div class="flash-sale-item" data-id="17" data-name="Long Sleeve Cotton T-Shirt" data-price="40.00" data-old-price="50.00" data-image="images/long-sleeve-tshirt.webp" data-in-stock="true">
 					<div class="flash-sale-pic">
 						<a href="product-detail.html?id=17">
 							<img src="images/long-sleeve-tshirt.webp" alt="Long Sleeve Cotton T-Shirt">
@@ -385,7 +415,7 @@
 						<span class="flash-sale-newprice">Rs. 11,100</span>
 					</div>
 				</div>
-				<div class="flash-sale-item" data-id="18" data-name="Grey Check Wool Coat" data-price="45.00" data-old-price="55.00" data-image="images/grey-check-coat.webp" data-stock="1">
+				<div class="flash-sale-item" data-id="18" data-name="Grey Check Wool Coat" data-price="45.00" data-old-price="55.00" data-image="images/grey-check-coat.webp" data-in-stock="true">
 					<div class="flash-sale-pic">
 						<a href="product-detail.html?id=18">
 							<img src="images/grey-check-coat.webp" alt="Grey Check Wool Coat">
@@ -401,7 +431,7 @@
 						<span class="flash-sale-newprice">Rs. 12,500</span>
 					</div>
 				</div>
-				<div class="flash-sale-item" data-id="19" data-name="Silk White Shirt" data-price="35.00" data-old-price="45.00" data-image="images/silk-white-shirt.webp" data-stock="1">
+				<div class="flash-sale-item" data-id="19" data-name="Silk White Shirt" data-price="35.00" data-old-price="45.00" data-image="images/silk-white-shirt.webp" data-in-stock="true">
 					<div class="flash-sale-pic">
 						<a href="product-detail.html?id=19">
 							<img src="images/silk-white-shirt.webp" alt="Silk White Shirt">
@@ -417,7 +447,7 @@
 						<span class="flash-sale-newprice">Rs. 9,700</span>
 					</div>
 				</div>
-				<div class="flash-sale-item" data-id="20" data-name="Blue Denim Jeans" data-price="35.00" data-old-price="45.00" data-image="images/blue-jeans-pant.webp" data-stock="1">
+				<div class="flash-sale-item" data-id="20" data-name="Blue Denim Jeans" data-price="35.00" data-old-price="45.00" data-image="images/blue-jeans-pant.webp" data-in-stock="true">
 					<div class="flash-sale-pic">
 						<a href="product-detail.html?id=20">
 							<img src="images/blue-jeans-pant.webp" alt="Blue Denim Jeans">
@@ -1273,9 +1303,9 @@ Copyright &copy;<script>document.write(new Date().getFullYear());</script> ZAZ C
 									</div>
 
 									<div class="size-204 respon6-next">
-										<div class="rs1-select2 bor8 bg0">
-											<select class="js-select2" name="time">
-												<option>Choose an option</option>
+										<div class="rs1-select2 bor8 bg0 js-variant-wrap" data-variant="size">
+											<select class="js-select2 js-variant-select" data-variant="size" name="size">
+												<option value="">Choose an option</option>
 												<option>Size S</option>
 												<option>Size M</option>
 												<option>Size L</option>
@@ -1292,9 +1322,9 @@ Copyright &copy;<script>document.write(new Date().getFullYear());</script> ZAZ C
 									</div>
 
 									<div class="size-204 respon6-next">
-										<div class="rs1-select2 bor8 bg0">
-											<select class="js-select2" name="time">
-												<option>Choose an option</option>
+										<div class="rs1-select2 bor8 bg0 js-variant-wrap" data-variant="color">
+											<select class="js-select2 js-variant-select" data-variant="color" name="color">
+												<option value="">Choose an option</option>
 												<option>Red</option>
 												<option>Blue</option>
 												<option>White</option>
@@ -1303,6 +1333,10 @@ Copyright &copy;<script>document.write(new Date().getFullYear());</script> ZAZ C
 											<div class="dropDownSelect2"></div>
 										</div>
 									</div>
+								</div>
+
+								<div class="js-variant-error" style="display:none; color:#c0392b; font-size:13px; margin:-2px 0 14px;">
+									Please select a size and color before adding to cart.
 								</div>
 
 								<div class="flex-w flex-r-m p-b-10">

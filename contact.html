@@ -277,8 +277,18 @@
 	
 	
 	<!-- Map -->
+	<!-- Plain Google Maps iframe embed — no API key required, unlike the
+	     JS Maps SDK. Coordinates match the store's actual location
+	     (see the address in the "GET IN TOUCH" section above / footer). -->
 	<div class="map">
-		<div class="size-303" id="google_map" data-map-x="29.3779376" data-map-y="71.698764" data-pin="images/icons/pin.png" data-scrollwhell="0" data-draggable="1" data-zoom="11"></div>
+		<iframe
+			class="size-303"
+			style="width: 100%; border: 0;"
+			loading="lazy"
+			allowfullscreen
+			referrerpolicy="no-referrer-when-downgrade"
+			src="https://www.google.com/maps?q=29.3779376,71.698764&z=15&output=embed">
+		</iframe>
 	</div>
 
 
@@ -438,32 +448,6 @@ Copyright &copy;<script>document.write(new Date().getFullYear());</script> ZAZ C
 				ps.update();
 			})
 		});
-	</script>
-<!--===============================================================================================-->
-	<script src="js/map-custom.js"></script>
-	<script>
-		// Loads the Google Maps JS SDK using a key fetched from /api/maps-key
-		// (backed by the GOOGLE_MAPS_API_KEY environment variable) instead of
-		// a key hardcoded into this page's source. If no key has been
-		// configured yet, the map section is simply left blank rather than
-		// the page breaking.
-		(function () {
-			var mapEl = document.getElementById('google_map');
-			if (!mapEl) return;
-			fetch('/api/maps-key')
-				.then(function (r) { return r.json(); })
-				.then(function (data) {
-					if (!data || !data.key) return;
-					var s = document.createElement('script');
-					s.src = 'https://maps.googleapis.com/maps/api/js?key=' +
-						encodeURIComponent(data.key) + '&callback=zazInitMap';
-					s.async = true;
-					document.head.appendChild(s);
-				})
-				.catch(function () {
-					// Network hiccup or API unavailable — map just won't load.
-				});
-		})();
 	</script>
 <!--===============================================================================================-->
 	<script src="js/main.js"></script>

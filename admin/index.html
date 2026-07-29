@@ -104,8 +104,12 @@
             <label class="price-label">Rs. <input type="number" class="p-price-input" min="0" step="1"></label>
           </div>
           <div>
-            <label class="field-label">Stock</label>
-            <input type="number" class="p-stock-input" min="0" step="1">
+            <label class="field-label">Availability</label>
+            <label class="stock-toggle-label">
+              <input type="checkbox" class="p-instock-input">
+              <span class="stock-toggle-box" aria-hidden="true">&#10003;</span>
+              <span class="stock-toggle-text">In Stock</span>
+            </label>
           </div>
         </div>
 
@@ -119,9 +123,35 @@
             <input type="text" class="p-saletag-input" placeholder="e.g. 10% Off">
           </div>
         </div>
+
+        <div class="variant-editor" data-variant-editor="size">
+          <label class="field-label">Sizes</label>
+          <div class="variant-chip-list p-size-list"></div>
+          <div class="variant-add-row">
+            <input type="text" class="p-size-add-input" placeholder="e.g. S, M, L, XL">
+            <button type="button" class="btn btn-secondary btn-sm variant-add-btn p-size-add-btn">+ Add</button>
+          </div>
+        </div>
+
+        <div class="variant-editor" data-variant-editor="color">
+          <label class="field-label">Colors</label>
+          <div class="variant-chip-list p-color-list"></div>
+          <div class="variant-add-row">
+            <input type="text" class="p-color-add-input" placeholder="e.g. Red, Blue">
+            <button type="button" class="btn btn-secondary btn-sm variant-add-btn p-color-add-btn">+ Add</button>
+          </div>
+        </div>
       </div>
       <button class="btn btn-danger btn-sm delete-product-btn">Delete</button>
     </div>
+  </template>
+
+  <!-- Template for a single size/color chip, with its own delete (x) button -->
+  <template id="variant-chip-template">
+    <span class="variant-chip">
+      <span class="variant-chip-label"></span>
+      <button type="button" class="variant-chip-remove" title="Remove" aria-label="Remove">&times;</button>
+    </span>
   </template>
 
   <!-- Categories editor modal: rename, add, or delete storefront categories.

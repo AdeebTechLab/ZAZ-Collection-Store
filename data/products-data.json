@@ -5,8 +5,20 @@
     "category": "summer-wear",
     "price": 4500,
     "oldPrice": null,
-    "stock": 25,
-    "image": "embroidered-lawn-kurti.webp"
+    "image": "embroidered-lawn-kurti.webp",
+    "inStock": true,
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Red",
+      "Blue",
+      "White",
+      "Grey"
+    ]
   },
   {
     "id": 2,
@@ -14,8 +26,20 @@
     "category": "summer-wear",
     "price": 9800,
     "oldPrice": null,
-    "stock": 25,
-    "image": "chiffon-party-wear-kurti.webp"
+    "image": "chiffon-party-wear-kurti.webp",
+    "inStock": true,
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Red",
+      "Blue",
+      "White",
+      "Grey"
+    ]
   },
   {
     "id": 3,
@@ -23,8 +47,20 @@
     "category": "winter-wear",
     "price": 7000,
     "oldPrice": null,
-    "stock": 25,
-    "image": "cotton-chino-trouser.webp"
+    "image": "cotton-chino-trouser.webp",
+    "inStock": true,
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Red",
+      "Blue",
+      "White",
+      "Grey"
+    ]
   },
   {
     "id": 4,
@@ -32,8 +68,20 @@
     "category": "summer-wear",
     "price": 20900,
     "oldPrice": null,
-    "stock": 25,
-    "image": "wool-blend-trench-coat.webp"
+    "image": "wool-blend-trench-coat.webp",
+    "inStock": true,
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Red",
+      "Blue",
+      "White",
+      "Grey"
+    ]
   },
   {
     "id": 5,
@@ -41,8 +89,20 @@
     "category": "summer-wear",
     "price": 9700,
     "oldPrice": null,
-    "stock": 25,
-    "image": "front-pocket-cardigan.webp"
+    "image": "front-pocket-cardigan.webp",
+    "inStock": true,
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Red",
+      "Blue",
+      "White",
+      "Grey"
+    ]
   },
   {
     "id": 6,
@@ -50,8 +110,20 @@
     "category": "party-wear",
     "price": 25900,
     "oldPrice": null,
-    "stock": 25,
-    "image": "embroidered-party-wear-suit.webp"
+    "image": "embroidered-party-wear-suit.webp",
+    "inStock": true,
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Red",
+      "Blue",
+      "White",
+      "Grey"
+    ]
   },
   {
     "id": 7,
@@ -59,8 +131,20 @@
     "category": "summer-wear",
     "price": 14600,
     "oldPrice": null,
-    "stock": 25,
-    "image": "stretch-cotton-kurti.webp"
+    "image": "stretch-cotton-kurti.webp",
+    "inStock": true,
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Red",
+      "Blue",
+      "White",
+      "Grey"
+    ]
   },
   {
     "id": 8,
@@ -68,8 +152,20 @@
     "category": "summer-wear",
     "price": 5300,
     "oldPrice": null,
-    "stock": 25,
-    "image": "metallic-print-chiffon-top.webp"
+    "image": "metallic-print-chiffon-top.webp",
+    "inStock": true,
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Red",
+      "Blue",
+      "White",
+      "Grey"
+    ]
   },
   {
     "id": 9,
@@ -77,8 +173,20 @@
     "category": "casual-wear",
     "price": 20900,
     "oldPrice": null,
-    "stock": 25,
-    "image": "casual-printed-cotton-coord-set.webp"
+    "image": "casual-printed-cotton-coord-set.webp",
+    "inStock": true,
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Red",
+      "Blue",
+      "White",
+      "Grey"
+    ]
   },
   {
     "id": 10,
@@ -86,8 +194,20 @@
     "category": "summer-wear",
     "price": 7200,
     "oldPrice": null,
-    "stock": 25,
-    "image": "striped-cotton-tshirt.webp"
+    "image": "striped-cotton-tshirt.webp",
+    "inStock": true,
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Red",
+      "Blue",
+      "White",
+      "Grey"
+    ]
   },
   {
     "id": 11,
@@ -95,8 +215,20 @@
     "category": "winter-wear",
     "price": 17600,
     "oldPrice": null,
-    "stock": 25,
-    "image": "cable-knit-wool-sweater.webp"
+    "image": "cable-knit-wool-sweater.webp",
+    "inStock": true,
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Red",
+      "Blue",
+      "White",
+      "Grey"
+    ]
   },
   {
     "id": 12,
@@ -104,8 +236,20 @@
     "category": "winter-wear",
     "price": 17600,
     "oldPrice": null,
-    "stock": 25,
-    "image": "quilted-winter-puffer-jacket.webp"
+    "image": "quilted-winter-puffer-jacket.webp",
+    "inStock": true,
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Red",
+      "Blue",
+      "White",
+      "Grey"
+    ]
   },
   {
     "id": 13,
@@ -113,8 +257,20 @@
     "category": "summer-wear",
     "price": 5100,
     "oldPrice": null,
-    "stock": 25,
-    "image": "full-sleeve-cotton-tshirt.webp"
+    "image": "full-sleeve-cotton-tshirt.webp",
+    "inStock": true,
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Red",
+      "Blue",
+      "White",
+      "Grey"
+    ]
   },
   {
     "id": 14,
@@ -122,8 +278,20 @@
     "category": "summer-wear",
     "price": 15200,
     "oldPrice": null,
-    "stock": 25,
-    "image": "embellished-party-dress.webp"
+    "image": "embellished-party-dress.webp",
+    "inStock": true,
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Red",
+      "Blue",
+      "White",
+      "Grey"
+    ]
   },
   {
     "id": 15,
@@ -131,8 +299,20 @@
     "category": "party-wear",
     "price": 24100,
     "oldPrice": null,
-    "stock": 25,
-    "image": "sequin-embellished-party-gown.webp"
+    "image": "sequin-embellished-party-gown.webp",
+    "inStock": true,
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Red",
+      "Blue",
+      "White",
+      "Grey"
+    ]
   },
   {
     "id": 16,
@@ -140,8 +320,20 @@
     "category": "summer-wear",
     "price": 8200,
     "oldPrice": null,
-    "stock": 25,
-    "image": "square-neck-blouse.webp"
+    "image": "square-neck-blouse.webp",
+    "inStock": true,
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Red",
+      "Blue",
+      "White",
+      "Grey"
+    ]
   },
   {
     "id": 17,
@@ -149,9 +341,21 @@
     "category": "summer-wear",
     "price": 11100,
     "oldPrice": 13900,
-    "stock": 25,
     "image": "long-sleeve-tshirt.webp",
-    "saleTag": "20% Off"
+    "saleTag": "20% Off",
+    "inStock": true,
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Red",
+      "Blue",
+      "White",
+      "Grey"
+    ]
   },
   {
     "id": 18,
@@ -159,9 +363,21 @@
     "category": "winter-wear",
     "price": 12500,
     "oldPrice": 15300,
-    "stock": 25,
     "image": "grey-check-coat.webp",
-    "saleTag": "18% Off"
+    "saleTag": "18% Off",
+    "inStock": true,
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Red",
+      "Blue",
+      "White",
+      "Grey"
+    ]
   },
   {
     "id": 19,
@@ -169,9 +385,21 @@
     "category": "summer-wear",
     "price": 9700,
     "oldPrice": 12500,
-    "stock": 25,
     "image": "silk-white-shirt.webp",
-    "saleTag": "22% Off"
+    "saleTag": "22% Off",
+    "inStock": true,
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Red",
+      "Blue",
+      "White",
+      "Grey"
+    ]
   },
   {
     "id": 20,
@@ -179,8 +407,20 @@
     "category": "winter-wear",
     "price": 9700,
     "oldPrice": 12500,
-    "stock": 25,
     "image": "blue-jeans-pant.webp",
-    "saleTag": "22% Off"
+    "saleTag": "22% Off",
+    "inStock": true,
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Red",
+      "Blue",
+      "White",
+      "Grey"
+    ]
   }
 ]

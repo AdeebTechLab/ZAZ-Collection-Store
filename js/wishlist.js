@@ -38,9 +38,20 @@
     return String(name || '').trim().toLowerCase().replace(/\s+/g, '-');
   }
 
+  // Unlike js/cart.js — which stores the bare filename straight from the
+  // product API (e.g. "embroidered-lawn-kurti.webp") — wishlist items are
+  // built from extractFromCard()/extractFromDetail() below, which read the
+  // *already-rendered* <img src> straight out of the DOM. That src is
+  // already a full, resolved path (e.g. "images/embroidered-lawn-kurti.webp",
+  // or a full https:// URL for an admin-uploaded photo), so re-prepending
+  // "images/" here — like cart.js's version does — would double it up into
+  // a broken "images/images/..." path. Only add the prefix for a bare
+  // filename that doesn't have one yet.
   function imageSrc(image) {
     if (!image) return 'images/embroidered-lawn-kurti.webp';
-    if (/^https?:\/\//i.test(image) || image.startsWith('data:')) return image;
+    if (/^https?:\/\//i.test(image) || image.startsWith('data:') || image.startsWith('images/')) {
+      return image;
+    }
     return 'images/' + image;
   }
 

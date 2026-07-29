@@ -31,7 +31,15 @@
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       const data = raw ? JSON.parse(raw) : [];
-      return Array.isArray(data) ? data : [];
+      if (!Array.isArray(data)) return [];
+      // Carts saved before size/color existed won't have a `key` — backfill
+      // one so old localStorage data still renders/removes correctly.
+      data.forEach((item) => {
+        if (!item.key) item.key = variantKey(item.id, item.size || '', item.color || '');
+        if (item.size == null) item.size = '';
+        if (item.color == null) item.color = '';
+      });
+      return data;
     } catch {
       return [];
     }
@@ -54,6 +62,15 @@
     if (!image) return 'images/embroidered-lawn-kurti.webp';
     if (/^https?:\/\//i.test(image) || image.startsWith('data:')) return image;
     return 'images/' + image;
+  }
+
+  // Size + color are mandatory (enforced in Quick View / product-detail before
+  // Cart.add is ever called), so every cart line item always has both. Two
+  // lines with the same product id but a different size/color are different
+  // variants and must stay separate rows, not merge quantities together —
+  // hence keying items on id+size+color rather than id alone.
+  function variantKey(id, size, color) {
+    return `${id}::${size}::${color}`;
   }
 
   const Cart = {
@@ -85,38 +102,47 @@
       writeCoupon(null);
       renderAll();
     },
-    add(product, qty) {
+    // `options.size` and `options.color` are required — callers (Quick View,
+    // product detail) must validate the person picked both before calling
+    // this, so every line item in the cart always carries a real variant.
+    add(product, qty, options) {
       qty = Math.max(1, parseInt(qty, 10) || 1);
+      const size = (options && options.size) || '';
+      const color = (options && options.color) || '';
+      const key = variantKey(product.id, size, color);
       const items = readCart();
-      const existing = items.find((i) => i.id === product.id);
+      const existing = items.find((i) => i.key === key);
       if (existing) {
         existing.qty += qty;
       } else {
         items.push({
+          key,
           id: product.id,
           name: product.name,
           price: Number(product.price) || 0,
           image: product.image || '',
+          size,
+          color,
           qty,
         });
       }
       writeCart(items);
       renderAll();
     },
-    setQty(id, qty) {
+    setQty(key, qty) {
       qty = parseInt(qty, 10);
       let items = readCart();
       if (!qty || qty < 1) {
-        items = items.filter((i) => i.id !== id);
+        items = items.filter((i) => i.key !== key);
       } else {
-        const item = items.find((i) => i.id === id);
+        const item = items.find((i) => i.key === key);
         if (item) item.qty = qty;
       }
       writeCart(items);
       renderAll();
     },
-    remove(id) {
-      const items = readCart().filter((i) => i.id !== id);
+    remove(key) {
+      const items = readCart().filter((i) => i.key !== key);
       writeCart(items);
       renderAll();
     },
@@ -148,12 +174,16 @@
       items.forEach((item) => {
         const li = document.createElement('li');
         li.className = 'header-cart-item flex-w flex-t m-b-12';
+        const variantLine = (item.size || item.color)
+          ? `<span class="header-cart-item-variant" style="display:block; font-size:12px; color:#888;">${escapeHtml([item.size, item.color].filter(Boolean).join(' / '))}</span>`
+          : '';
         li.innerHTML = `
           <div class="header-cart-item-img">
             <img src="${imageSrc(item.image)}" alt="IMG">
           </div>
           <div class="header-cart-item-txt p-t-8">
             <span class="header-cart-item-name m-b-18">${escapeHtml(item.name)}</span>
+            ${variantLine}
             <span class="header-cart-item-info">${item.qty} x ${money(item.price)}</span>
           </div>
         `;
@@ -174,15 +204,15 @@
 
   // --- Full cart page (shoping-cart.html) ---
   function renderCartPage() {
-    const table = document.querySelector('.table-shopping-cart');
-    if (!table) return; // not on the cart page
-
-    let tbody = table.querySelector('tbody#cart-rows');
-    if (!tbody) {
-      tbody = document.createElement('tbody');
-      tbody.id = 'cart-rows';
-      table.appendChild(tbody);
-    }
+    // shoping-cart.html is the only page with a static <tbody id="cart-rows">
+    // in its markup. wishlist.html reuses the same `.table-shopping-cart`
+    // class purely for its table's CSS styling, so matching on that class
+    // alone would (and used to) make this function run there too and inject
+    // a second, unwanted tbody of cart rows onto the wishlist page.
+    const tbody = document.getElementById('cart-rows');
+    if (!tbody) return; // not on the real cart page
+    const table = tbody.closest('.table-shopping-cart');
+    if (!table) return;
 
     const items = readCart();
     tbody.innerHTML = '';
@@ -196,7 +226,15 @@
       items.forEach((item) => {
         const tr = document.createElement('tr');
         tr.className = 'table_row';
+        tr.dataset.key = item.key;
         tr.dataset.id = item.id;
+        const variantLine = (item.size || item.color)
+          ? `<div class="cart-item-variant" style="font-size:12.5px; color:#666; margin-top:3px;">
+               ${item.size ? `<span><strong>Size:</strong> ${escapeHtml(item.size)}</span>` : ''}
+               ${item.size && item.color ? ' &nbsp;|&nbsp; ' : ''}
+               ${item.color ? `<span><strong>Color:</strong> ${escapeHtml(item.color)}</span>` : ''}
+             </div>`
+          : '';
         tr.innerHTML = `
           <td class="column-1">
             <div class="how-itemcart1 pos-relative">
@@ -204,7 +242,7 @@
               <span class="js-cart-remove pos-absolute" title="Remove" style="top:-6px; right:-6px; width:20px; height:20px; border-radius:50%; background:#fff; border:1px solid #e6e6e6; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:12px; color:#888;">&times;</span>
             </div>
           </td>
-          <td class="column-2">${escapeHtml(item.name)}</td>
+          <td class="column-2">${escapeHtml(item.name)}${variantLine}<span class="cart-item-oos-badge" style="display:none;">Out of Stock</span></td>
           <td class="column-3">${money(item.price)}</td>
           <td class="column-4">
             <div class="wrap-num-product flex-w m-l-auto m-r-0">
@@ -241,33 +279,35 @@
     // Wire row controls (delegated once per render since we rebuild rows each time)
     tbody.querySelectorAll('.js-cart-remove').forEach((btn) => {
       btn.addEventListener('click', (e) => {
-        const id = Number(e.target.closest('tr').dataset.id);
-        Cart.remove(id);
+        const key = e.target.closest('tr').dataset.key;
+        Cart.remove(key);
       });
     });
     tbody.querySelectorAll('.js-cart-up').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         const tr = e.target.closest('tr');
-        const id = Number(tr.dataset.id);
+        const key = tr.dataset.key;
         const input = tr.querySelector('.js-cart-qty');
-        Cart.setQty(id, Number(input.value) + 1);
+        Cart.setQty(key, Number(input.value) + 1);
       });
     });
     tbody.querySelectorAll('.js-cart-down').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         const tr = e.target.closest('tr');
-        const id = Number(tr.dataset.id);
+        const key = tr.dataset.key;
         const input = tr.querySelector('.js-cart-qty');
-        Cart.setQty(id, Number(input.value) - 1);
+        Cart.setQty(key, Number(input.value) - 1);
       });
     });
     tbody.querySelectorAll('.js-cart-qty').forEach((input) => {
       input.addEventListener('change', (e) => {
         const tr = e.target.closest('tr');
-        const id = Number(tr.dataset.id);
-        Cart.setQty(id, Number(input.value));
+        const key = tr.dataset.key;
+        Cart.setQty(key, Number(input.value));
       });
     });
+
+    markOutOfStockRows(tbody);
   }
 
   function renderAll() {
@@ -284,7 +324,10 @@
   function buildOrderMessage(items, details) {
     const lines = ['Hi! I would like to place an order:', ''];
     items.forEach((item) => {
-      lines.push(`• ${item.name} — Qty: ${item.qty} — ${money(item.price)} each — ${money(item.qty * item.price)}`);
+      const variant = [item.size ? `Size: ${item.size}` : '', item.color ? `Color: ${item.color}` : '']
+        .filter(Boolean)
+        .join(', ');
+      lines.push(`• ${item.name}${variant ? ` [${variant}]` : ''} — Qty: ${item.qty} — ${money(item.price)} each — ${money(item.qty * item.price)}`);
     });
     const subtotal = items.reduce((sum, item) => sum + item.qty * item.price, 0);
     const coupon = Cart.getCoupon();
@@ -306,6 +349,53 @@
     const message = buildOrderMessage(items, details);
     const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank', 'noopener');
+  }
+
+  // --- Live stock lookup ---
+  // A cart item only ever stores a name/price/image snapshot from when it
+  // was added — not whether it's still orderable. Since an admin can mark
+  // something Out of Stock at any time (even after it's already sitting in
+  // someone's cart), we re-check the *current* /api/products list rather
+  // than trusting whatever was true when the item was added. Cached per
+  // page load; bindCheckoutButton() forces a fresh fetch right before
+  // checkout so a stale cache can't let an out-of-stock order through.
+  let productsStockCache = null;
+
+  async function fetchProductsStockMap(forceFresh) {
+    if (productsStockCache && !forceFresh) return productsStockCache;
+    try {
+      const res = await fetch('/api/products', { cache: 'no-store' });
+      if (!res.ok) throw new Error('bad response');
+      const products = await res.json();
+      const map = new Map();
+      products.forEach((p) => map.set(p.id, p.inStock !== false));
+      productsStockCache = map;
+    } catch {
+      productsStockCache = new Map(); // unknown — treat as "can't confirm", not a hard block
+    }
+    return productsStockCache;
+  }
+
+  // Tags each already-rendered cart row as out-of-stock (red badge, dimmed,
+  // qty controls disabled) if its product is currently marked Out of Stock
+  // in the live catalogue. Runs after every cart-page render.
+  async function markOutOfStockRows(tbody) {
+    const rows = Array.from(tbody.querySelectorAll('tr.table_row[data-id]'));
+    if (!rows.length) return;
+    const stockMap = await fetchProductsStockMap();
+    rows.forEach((tr) => {
+      const id = Number(tr.dataset.id);
+      const inStock = stockMap.has(id) ? stockMap.get(id) : true;
+      tr.classList.toggle('cart-row-oos', !inStock);
+      const badge = tr.querySelector('.cart-item-oos-badge');
+      if (badge) badge.style.display = inStock ? 'none' : 'inline-block';
+      const qtyInput = tr.querySelector('.js-cart-qty');
+      const upBtn = tr.querySelector('.js-cart-up');
+      const downBtn = tr.querySelector('.js-cart-down');
+      if (qtyInput) qtyInput.disabled = !inStock;
+      if (upBtn) upBtn.style.pointerEvents = inStock ? '' : 'none';
+      if (downBtn) downBtn.style.pointerEvents = inStock ? '' : 'none';
+    });
   }
 
   // --- Checkout details modal: collects delivery info before we build the
@@ -338,12 +428,34 @@
     }
 
     document.querySelectorAll('.js-checkout-whatsapp').forEach((btn) => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         const items = readCart();
         if (!items.length) {
           alert('Your cart is empty. Add something before checking out.');
           return;
         }
+
+        // Re-check live stock right before checkout (not just whatever the
+        // cart page happened to show a moment ago) — an admin may have
+        // marked something Out of Stock in the meantime. If anything in
+        // the cart is no longer orderable, stop here instead of letting
+        // the order through; the cart page's own Out of Stock badges/
+        // disabled controls guide the person to remove it.
+        const original = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Checking stock…';
+        const stockMap = await fetchProductsStockMap(true);
+        btn.disabled = false;
+        btn.textContent = original;
+
+        const outOfStockItems = items.filter((item) => stockMap.has(item.id) && stockMap.get(item.id) === false);
+        if (outOfStockItems.length) {
+          const names = outOfStockItems.map((i) => i.name).join(', ');
+          alert(`Sorry, the following item(s) in your cart are now Out of Stock and can't be ordered: ${names}. Please remove them from your cart to continue.`);
+          renderAll();
+          return;
+        }
+
         if (!modal || !form) {
           // Modal markup isn't on this page for some reason — fall back to
           // sending the order without delivery details rather than doing
@@ -404,9 +516,9 @@
       btn.addEventListener('click', () => {
         const rows = document.querySelectorAll('#cart-rows tr.table_row');
         rows.forEach((tr) => {
-          const id = Number(tr.dataset.id);
+          const key = tr.dataset.key;
           const input = tr.querySelector('.js-cart-qty');
-          if (input) Cart.setQty(id, input.value);
+          if (input) Cart.setQty(key, input.value);
         });
         const original = btn.textContent;
         btn.textContent = 'Updated ✓';

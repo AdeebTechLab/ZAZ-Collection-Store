@@ -46,8 +46,18 @@ function validateProducts(data) {
     if (product.saleTag != null && typeof product.saleTag !== 'string') {
       return `Product "${product.name}" has an invalid badge text`;
     }
-    if (typeof product.stock !== 'number' || Number.isNaN(product.stock) || product.stock < 0) {
-      return `Product "${product.name}" needs a valid non-negative stock quantity`;
+    if (typeof product.inStock !== 'boolean') {
+      return `Product "${product.name}" needs a valid stock status (in stock or out of stock)`;
+    }
+    if (product.sizes != null) {
+      if (!Array.isArray(product.sizes) || product.sizes.some((s) => typeof s !== 'string')) {
+        return `Product "${product.name}" has invalid sizes`;
+      }
+    }
+    if (product.colors != null) {
+      if (!Array.isArray(product.colors) || product.colors.some((c) => typeof c !== 'string')) {
+        return `Product "${product.name}" has invalid colors`;
+      }
     }
     if (typeof product.image !== 'string' || !product.image.trim()) {
       return `Product "${product.name}" needs an image`;

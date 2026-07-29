@@ -1,9 +1,10 @@
 # Product Admin Panel — Setup Guide
 
 Your site now has a password-protected admin panel at **`/admin`** for
-managing products (name, category, price, discounts, stock, and photos)
-without touching any code. Changes made in the panel go live on the site
-immediately after you click **Save Changes** — no redeploy needed.
+managing products (name, category, price, discounts, sizes, colors,
+availability, and photos) without touching any code. Changes made in the
+panel go live on the site immediately after you click **Save Changes** —
+no redeploy needed.
 
 ## How it works
 
@@ -15,7 +16,7 @@ immediately after you click **Save Changes** — no redeploy needed.
   deployments. Photos you upload in the panel are also stored there.
 - If Blob storage isn't set up yet, or nothing has been saved yet, the site
   falls back to the products bundled in `data/products-data.json` (the
-  16 products the theme ships with today), so the public site never breaks.
+  20 products the theme ships with today), so the public site never breaks.
 - The homepage ("Product Overview") and the `product.html` shop page both
   pull from the same product list, so you only manage products in one
   place.
@@ -30,7 +31,8 @@ In your Vercel project → **Settings → Environment Variables**, add:
 | `ADMIN_USERNAME` | the login username you want, e.g. `admin` |
 | `ADMIN_PASSWORD` | a strong password |
 | `SESSION_SECRET` | any long random string (e.g. generate one at randomkeygen.com) — this signs the login session, keep it secret |
-| `GOOGLE_MAPS_API_KEY` | optional — shows the map on the Contact page. Create one in the [Google Cloud Console](https://console.cloud.google.com/), enable the "Maps JavaScript API", then restrict the key to your site's domain(s) and to that one API. Leave unset and the Contact page just won't show a map. |
+
+The Contact page's map is a plain iframe embed, so it needs no API key or extra setup.
 
 Apply them to the **Production** environment (and Preview if you want admin
 access on preview deployments too).
@@ -52,18 +54,27 @@ effect.
 
 1. Go to `https://yourdomain.com/admin` (or `/admin/login.html`).
 2. Log in with the username/password you set above.
-3. Use **+ Add Product** to add a new item, or edit any existing card's
-   name, category, price, and stock directly in the fields.
+3. Products are grouped into a section per category automatically. Use
+   **+ Add Product** to add a new item, or edit any existing card's name,
+   category, price, sizes, colors, and availability directly in the fields.
 4. Click **Change Photo** on any product to upload a new photo — it's
    resized automatically so uploads stay small and fast.
 5. Toggle **Apply a discount** to show a crossed-out old price next to the
    current price on the storefront.
-6. Set **Stock** to `0` to automatically show an "Out of Stock" badge on
-   the product photo on the live site.
-7. Use the category dropdown at the top to filter which products you're
-   looking at while editing (Women / Men / Bag / Shoes / Watches).
-8. Click **Delete** on a product card to remove it.
-9. Click **Save Changes** at the top. The public site updates right away.
+6. Toggle **In Stock** off to automatically show an "Out of Stock" badge on
+   the product photo on the live site, hide it from sale/discount badges,
+   and stop customers from adding it to their cart or checking out with it.
+7. Use the **Sizes** and **Colors** fields to add or remove which options
+   show up in that product's Size/Color dropdowns on the storefront — type
+   a value and click **+ Add** (or press Enter), click the **×** on a chip
+   to remove it. Leave a field empty to hide that dropdown for the product.
+8. Use the search box at the top to quickly find a product by name instead
+   of scrolling — categories themselves are managed separately via
+   **+ Manage Categories** (rename, add, delete, or reorder them; the
+   default set is Summer Wear / Winter Wear / Ethnic Wear / Casual Wear /
+   Party Wear, but this is fully editable).
+9. Click **Delete** on a product card to remove it.
+10. Click **Save Changes** at the top. The public site updates right away.
 
 ## Notes & limits
 

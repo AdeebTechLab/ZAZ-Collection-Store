@@ -13,10 +13,53 @@
 	z-index: 5;
 }
 
+/*==================================================================
+[ Out-of-stock cart rows ]
+Shown on shoping-cart.html when a product already sitting in someone's
+cart gets marked Out of Stock afterwards (see markOutOfStockRows in
+js/cart.js) — dims the row, disables its quantity controls, and shows
+a small red badge next to the item name so it's obvious it needs to be
+removed before checkout can proceed. */
+.cart-item-oos-badge {
+	display: inline-block;
+	margin-left: 8px;
+	background: #fdecea;
+	color: #c0392b;
+	font-size: 10.5px;
+	font-weight: 600;
+	letter-spacing: 0.3px;
+	text-transform: uppercase;
+	padding: 3px 8px;
+	border-radius: 3px;
+	vertical-align: middle;
+}
+tr.cart-row-oos {
+	opacity: 0.6;
+}
+tr.cart-row-oos .js-cart-qty {
+	background: #f2f2f2;
+	cursor: not-allowed;
+}
+
 .js-addcart-detail:disabled,
 .js-addcart-detail.is-disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
+}
+
+/*==================================================================
+[ Mandatory Size/Color selection (Quick View + product detail) ]
+select2 renders its own fake dropdown UI over the real <select>, so we
+flag the wrapping .rs1-select2 element (not the hidden <select> itself)
+to make the invalid state visible. */
+.js-variant-wrap.is-invalid {
+	border: 1px solid #c0392b;
+	border-radius: 2px;
+}
+.js-variant-error {
+	background: #fdecea;
+	border-left: 3px solid #c0392b;
+	padding: 8px 10px;
 }
 
 /*==================================================================
@@ -827,4 +870,86 @@ footer column. */
 		margin-left: auto;
 		margin-right: auto;
 	}
+}
+
+/*==================================================================
+[ Mobile-only hero slider (homepage) ]
+The desktop hero above (.wrap-slick1) uses wide banner photos with
+background-size:cover — great on a widescreen, but on a narrow phone
+that crop cuts the model out of frame entirely. This is a second,
+independent slider built from portrait photos framed for mobile, and
+the two are swapped by breakpoint: only one is ever visible at a time,
+so there's no duplicate autoplay/height jump. See index.html for the
+.section-slide-mobile markup and js/slick-custom.js for its slick init. */
+.section-slide-mobile {
+	display: none;
+}
+@media (max-width: 767px) {
+	.section-slide {
+		display: none;
+	}
+	.section-slide-mobile {
+		display: block;
+	}
+}
+
+.wrap-slick-mobile-hero {
+	position: relative;
+}
+.item-slick-mobile-hero {
+	position: relative;
+	height: calc(100vh - 70px);
+	max-height: 640px;
+	min-height: 420px;
+	overflow: hidden;
+}
+.item-slick-mobile-hero img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: top center;
+}
+.mobile-hero-cta {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 26px;
+	display: flex;
+	justify-content: center;
+	z-index: 2;
+}
+/* Slick clones each slide's DOM for its infinite-loop track, which would
+   otherwise leave duplicate "Shop Now" buttons visible behind the active
+   one for a frame — hide it on any non-active clone. */
+.slick-mobile-hero .slick-slide:not(.slick-active) .mobile-hero-cta {
+	display: none;
+}
+
+.slick-mobile-hero-dots {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 90px;
+	z-index: 3;
+	display: flex;
+	justify-content: center;
+	gap: 8px;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+.slick-mobile-hero-dots li button {
+	width: 8px;
+	height: 8px;
+	padding: 0;
+	border: none;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.55);
+	color: transparent;
+	font-size: 0;
+	cursor: pointer;
+}
+.slick-mobile-hero-dots li.slick-active button {
+	background: #fff;
 }
