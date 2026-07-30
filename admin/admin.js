@@ -5,6 +5,10 @@
   let nextId = 1;
   let searchTerm = '';
 
+  // Cover photo + up to 5 extra gallery photos per product — mirrors the
+  // MAX_GALLERY_PHOTOS cap enforced server-side in api/products.js.
+  const MAX_GALLERY_PHOTOS = 6;
+
   // Categories used to be a fixed set of 5 keys. They're now fully dynamic —
   // an admin can rename, add, or delete them via the Manage Categories modal
   // — so instead of a hardcoded list we track whatever keys are currently
@@ -16,6 +20,17 @@
   // Discount coupons, loaded from /api/coupons. Empty until an admin adds
   // some via the Manage Coupons modal.
   let coupons = [];
+
+  // Flat delivery charge (Rs.), loaded from /api/settings. Defaults to 0
+  // (free) until an admin sets one via the Delivery Charge modal.
+  let deliveryCharge = 0;
+
+  // Standalone site gallery photos (gallery.html), loaded from /api/gallery.
+  // Separate from each product's own extra photos (product.images) — this
+  // is a flat, admin-ordered list of { id, image, caption } shown on its
+  // own storefront page.
+  let galleryPhotos = [];
+  let nextGalleryId = 1;
 
   const authGate = document.getElementById('auth-gate');
   const app = document.getElementById('app');
@@ -40,6 +55,19 @@
   const couponsCloseX = document.getElementById('coupons-close-x');
   const couponsCancelBtn = document.getElementById('coupons-cancel-btn');
   const couponsSaveBtn = document.getElementById('coupons-save-btn');
+  const editDeliveryBtn = document.getElementById('edit-delivery-btn');
+  const deliveryModal = document.getElementById('delivery-modal');
+  const deliveryChargeInput = document.getElementById('delivery-charge-input');
+  const deliveryCloseX = document.getElementById('delivery-close-x');
+  const deliveryCancelBtn = document.getElementById('delivery-cancel-btn');
+  const deliverySaveBtn = document.getElementById('delivery-save-btn');
+  const editGalleryBtn = document.getElementById('edit-gallery-btn');
+  const siteGalleryModal = document.getElementById('site-gallery-modal');
+  const siteGalleryFieldsContainer = document.getElementById('site-gallery-fields');
+  const siteGalleryAddInput = document.getElementById('site-gallery-add-input');
+  const siteGalleryCloseX = document.getElementById('site-gallery-close-x');
+  const siteGalleryCancelBtn = document.getElementById('site-gallery-cancel-btn');
+  const siteGallerySaveBtn = document.getElementById('site-gallery-save-btn');
   const productSearchInput = document.getElementById('product-search-input');
   const productSearchClear = document.getElementById('product-search-clear');
   const searchNoResults = document.getElementById('search-no-results');
@@ -102,6 +130,8 @@
       await loadCategories();
       await loadProducts();
       await loadCoupons();
+      await loadSettings();
+      await loadGallery();
     } catch (err) {
       authGate.textContent = 'Could not check your session. Please refresh.';
     }
@@ -174,6 +204,13 @@
         delete p.stock;
         if (!Array.isArray(p.sizes)) p.sizes = [];
         if (!Array.isArray(p.colors)) p.colors = [];
+        // Older saved products (and the bundled defaults) only ever had a
+        // single cover `image` — migrate that into a one-photo `images`
+        // gallery array the first time it's loaded here, so index 0 always
+        // mirrors the cover and the gallery editor has something to show.
+        if (!Array.isArray(p.images) || !p.images.length) {
+          p.images = p.image ? [p.image] : [];
+        }
       });
       computeNextId();
       renderAll();
@@ -199,6 +236,36 @@
     } catch (err) {
       showBanner('Could not load coupons: ' + err.message, 'error');
     }
+  }
+
+  async function loadSettings() {
+    try {
+      const res = await fetch('/api/settings', { cache: 'no-store' });
+      if (!res.ok) throw new Error('Failed to load settings (status ' + res.status + ')');
+      const data = await res.json();
+      const val = Number(data.deliveryCharge);
+      deliveryCharge = Number.isFinite(val) && val >= 0 ? val : 0;
+    } catch (err) {
+      showBanner('Could not load delivery charge: ' + err.message, 'error');
+    }
+  }
+
+  // --- Load standalone site gallery photos ---
+  async function loadGallery() {
+    try {
+      const res = await fetch('/api/gallery', { cache: 'no-store' });
+      if (!res.ok) throw new Error('Failed to load gallery (status ' + res.status + ')');
+      galleryPhotos = await res.json();
+      if (!Array.isArray(galleryPhotos)) galleryPhotos = [];
+    } catch (err) {
+      showBanner('Could not load the gallery: ' + err.message, 'error');
+      galleryPhotos = [];
+    }
+    let max = 0;
+    galleryPhotos.forEach((p) => {
+      if (typeof p.id === 'number' && p.id > max) max = p.id;
+    });
+    nextGalleryId = max + 1;
   }
 
   // --- Rendering ---
@@ -352,6 +419,10 @@
     const moveUpBtn = node.querySelector('.move-up-btn');
     const moveDownBtn = node.querySelector('.move-down-btn');
 
+    if (!Array.isArray(product.images) || !product.images.length) {
+      product.images = product.image ? [product.image] : [];
+    }
+
     moveUpBtn.disabled = !!isFirst;
     moveDownBtn.disabled = !!isLast;
     moveUpBtn.addEventListener('click', () => moveProduct(product, -1));
@@ -444,6 +515,15 @@
         if (!res.ok) throw new Error(data.error || 'Upload failed');
         product.image = data.url;
         img.src = data.url;
+        // Keep the gallery's first slot (the cover) in sync, without
+        // touching any extra photos already added after it (extra photos
+        // aren't editable from this admin panel, but are preserved if a
+        // product already has them from a previous version of this feature).
+        if (!product.images.length) {
+          product.images = [data.url];
+        } else {
+          product.images[0] = data.url;
+        }
       } catch (err) {
         showBanner('Photo upload failed: ' + err.message, 'error');
       } finally {
@@ -1178,6 +1258,204 @@
     }
   });
 
+  // --- Manage Delivery Charge modal ---
+  // A single store-wide flat delivery fee (Rs.), added on top of the cart
+  // subtotal at checkout. Simple single-field modal, saved straight to
+  // /api/settings — no product/category save needed alongside it.
+
+  function openDeliveryModal() {
+    deliveryChargeInput.value = deliveryCharge || 0;
+    deliveryModal.classList.remove('hidden');
+    deliveryChargeInput.focus();
+  }
+
+  function closeDeliveryModal() {
+    deliveryModal.classList.add('hidden');
+  }
+
+  editDeliveryBtn.addEventListener('click', openDeliveryModal);
+  deliveryCloseX.addEventListener('click', closeDeliveryModal);
+  deliveryCancelBtn.addEventListener('click', closeDeliveryModal);
+  deliveryModal.addEventListener('click', (e) => {
+    if (e.target === deliveryModal) closeDeliveryModal();
+  });
+
+  deliverySaveBtn.addEventListener('click', async () => {
+    const raw = deliveryChargeInput.value.trim();
+    const value = Number(raw);
+    if (!raw || Number.isNaN(value) || !Number.isFinite(value) || value < 0) {
+      showBanner('Delivery charge must be a non-negative number.', 'error');
+      return;
+    }
+
+    deliverySaveBtn.disabled = true;
+    deliverySaveBtn.textContent = 'Saving…';
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deliveryCharge: value }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to save delivery charge');
+
+      deliveryCharge = value;
+      closeDeliveryModal();
+      showBanner('Delivery charge updated — changes are live on the site now.', 'success');
+    } catch (err) {
+      showBanner('Could not save delivery charge: ' + err.message, 'error');
+    } finally {
+      deliverySaveBtn.disabled = false;
+      deliverySaveBtn.textContent = 'Save Delivery Charge';
+    }
+  });
+
+  // --- Manage Gallery modal ---
+  // The standalone site gallery (gallery.html) — a flat, admin-ordered list
+  // of { id, image, caption } photos, separate from each product's own
+  // extra photos (which live on that product's card and save with the main
+  // Save Changes button instead). Uses the same crop tool and /api/upload
+  // endpoint as product photos for a consistent editing experience.
+  const siteGalleryItemTemplate = document.getElementById('site-gallery-item-template');
+
+  function renderSiteGalleryFields() {
+    siteGalleryFieldsContainer.innerHTML = '';
+    galleryPhotos.forEach((photo, idx) => {
+      const node = siteGalleryItemTemplate.content.firstElementChild.cloneNode(true);
+      const img = node.querySelector('.site-gallery-img');
+      const captionInput = node.querySelector('.site-gallery-caption-input');
+      const removeBtn = node.querySelector('.site-gallery-remove');
+      const moveLeftBtn = node.querySelector('.site-gallery-move-left');
+      const moveRightBtn = node.querySelector('.site-gallery-move-right');
+      const featureBtn = node.querySelector('.site-gallery-feature');
+
+      img.src = imageSrc(photo.image);
+      img.alt = photo.caption || '';
+      captionInput.value = photo.caption || '';
+      captionInput.addEventListener('input', () => {
+        photo.caption = captionInput.value;
+      });
+
+      removeBtn.addEventListener('click', () => {
+        if (!confirm('Remove this photo from the gallery?')) return;
+        const i = galleryPhotos.indexOf(photo);
+        if (i !== -1) galleryPhotos.splice(i, 1);
+        renderSiteGalleryFields();
+      });
+
+      moveLeftBtn.disabled = idx === 0;
+      moveRightBtn.disabled = idx === galleryPhotos.length - 1;
+      moveLeftBtn.addEventListener('click', () => {
+        [galleryPhotos[idx - 1], galleryPhotos[idx]] = [galleryPhotos[idx], galleryPhotos[idx - 1]];
+        renderSiteGalleryFields();
+      });
+      moveRightBtn.addEventListener('click', () => {
+        [galleryPhotos[idx], galleryPhotos[idx + 1]] = [galleryPhotos[idx + 1], galleryPhotos[idx]];
+        renderSiteGalleryFields();
+      });
+
+      // The Gallery page always opens with photo index 0 shown large and
+      // centered (the rest dimmed/blurred to either side — see
+      // .gallery-slick .slick-slide.slick-center in shop-additions.css and
+      // the centerMode Slick carousel in js/gallery-render.js). So "make
+      // this the featured photo" just means moving it to the front of the
+      // list — no separate flag needed, and it stays in sync with reality
+      // even if a manager reorders things afterwards.
+      node.querySelector('.site-gallery-photo').classList.toggle('is-featured', idx === 0);
+      featureBtn.disabled = idx === 0;
+      featureBtn.title = idx === 0 ? 'This is the featured photo' : 'Show this photo first';
+      featureBtn.addEventListener('click', () => {
+        galleryPhotos.splice(idx, 1);
+        galleryPhotos.unshift(photo);
+        renderSiteGalleryFields();
+      });
+
+      siteGalleryFieldsContainer.appendChild(node);
+    });
+
+    if (!galleryPhotos.length) {
+      const empty = document.createElement('p');
+      empty.className = 'gallery-empty-hint';
+      empty.textContent = 'No gallery photos yet — click "+ Add Photo" below to add the first one.';
+      siteGalleryFieldsContainer.appendChild(empty);
+    }
+  }
+
+  function openSiteGalleryModal() {
+    renderSiteGalleryFields();
+    siteGalleryModal.classList.remove('hidden');
+  }
+
+  function closeSiteGalleryModal() {
+    siteGalleryModal.classList.add('hidden');
+  }
+
+  editGalleryBtn.addEventListener('click', openSiteGalleryModal);
+  siteGalleryCloseX.addEventListener('click', closeSiteGalleryModal);
+  siteGalleryCancelBtn.addEventListener('click', closeSiteGalleryModal);
+  siteGalleryModal.addEventListener('click', (e) => {
+    if (e.target === siteGalleryModal) closeSiteGalleryModal();
+  });
+
+  siteGalleryAddInput.addEventListener('change', async () => {
+    const file = siteGalleryAddInput.files[0];
+    if (!file) return;
+    const dataUrl = await openCropper(file);
+    siteGalleryAddInput.value = ''; // allow re-selecting the same file later
+    if (!dataUrl) return;
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: file.name, dataUrl }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Upload failed');
+      galleryPhotos.push({ id: nextGalleryId++, image: data.url, caption: '' });
+      renderSiteGalleryFields();
+    } catch (err) {
+      showBanner('Gallery photo upload failed: ' + err.message, 'error');
+    }
+  });
+
+  siteGallerySaveBtn.addEventListener('click', async () => {
+    // Pull each card's current caption text (in case a manager typed one
+    // without tabbing/clicking away, which the 'input' listener above
+    // already keeps in sync with, but this ensures nothing is stale) and
+    // normalize empty captions to null so they save the same way the
+    // bundled defaults do.
+    const cards = Array.from(siteGalleryFieldsContainer.querySelectorAll('.site-gallery-item'));
+    cards.forEach((card, idx) => {
+      const captionInput = card.querySelector('.site-gallery-caption-input');
+      if (galleryPhotos[idx]) {
+        galleryPhotos[idx].caption = captionInput ? captionInput.value.trim() || null : null;
+      }
+    });
+
+    const payload = galleryPhotos.map((p) => ({ id: p.id, image: p.image, caption: p.caption || null }));
+
+    siteGallerySaveBtn.disabled = true;
+    siteGallerySaveBtn.textContent = 'Saving…';
+    try {
+      const res = await fetch('/api/gallery', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to save gallery');
+
+      galleryPhotos = payload;
+      closeSiteGalleryModal();
+      showBanner('Gallery updated — changes are live on the site now.', 'success');
+    } catch (err) {
+      showBanner('Could not save gallery: ' + err.message, 'error');
+    } finally {
+      siteGallerySaveBtn.disabled = false;
+      siteGallerySaveBtn.textContent = 'Save Gallery';
+    }
+  });
+
   // --- Add product ---
   document.getElementById('add-product-btn').addEventListener('click', () => {
     const defaultCategory = categoryOrder[0];
@@ -1192,6 +1470,7 @@
       sizes: [],
       colors: [],
       image: '',
+      images: [],
     };
     productsData.push(newProduct);
     renderAll();
@@ -1244,6 +1523,9 @@
       }
       if (!product.image) {
         return `"${product.name}" needs a photo.`;
+      }
+      if (Array.isArray(product.images) && product.images.length > MAX_GALLERY_PHOTOS) {
+        return `"${product.name}" can have at most ${MAX_GALLERY_PHOTOS} photos (cover + ${MAX_GALLERY_PHOTOS - 1} extra).`;
       }
       if (product.price == null || Number.isNaN(product.price) || product.price < 0) {
         return `"${product.name}" needs a valid price.`;

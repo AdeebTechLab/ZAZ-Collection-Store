@@ -25,11 +25,22 @@
         `<span class="stext-105" style="color:#999;text-decoration:line-through;margin-left:6px;">${money(product.oldPrice)}</span>`
       : `<span class="stext-105 cl3">${money(product.price)}</span>`;
 
+    const photos = galleryImages(product);
+    const hasGallery = photos.length > 1;
+    const galleryNavHtml = hasGallery
+      ? `
+          <button type="button" class="card-gallery-arrow card-gallery-prev" aria-label="Previous photo"><i class="fa fa-angle-left" aria-hidden="true"></i></button>
+          <button type="button" class="card-gallery-arrow card-gallery-next" aria-label="Next photo"><i class="fa fa-angle-right" aria-hidden="true"></i></button>
+          <div class="card-gallery-dots">${photos.map((_, i) => `<span class="card-gallery-dot${i === 0 ? ' is-active' : ''}"></span>`).join('')}</div>
+        `
+      : '';
+
     col.innerHTML = `
       <div class="block2">
         <div class="block2-pic hov-img0">
-          <img src="${imageSrc(product.image)}" alt="IMG-PRODUCT">
+          <img class="card-gallery-img" src="${photos[0]}" alt="IMG-PRODUCT">
           ${outOfStock ? '<span class="out-of-stock-badge">Out of Stock</span>' : ''}
+          ${galleryNavHtml}
           <a href="#" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04 js-show-modal1">
             Quick View
           </a>
@@ -53,6 +64,32 @@
       </div>
     `;
 
+    // Lets a shopper flip through a product's extra photos right on its
+    // grid card (prev/next arrows + dots), without needing to open Quick
+    // View first. Swaps the single <img>'s src rather than keeping every
+    // photo in the DOM at once, so a page of 20+ cards doesn't eagerly
+    // load 100+ images just for the ones nobody clicks through.
+    if (hasGallery) {
+      const imgEl = col.querySelector('.card-gallery-img');
+      const dots = Array.from(col.querySelectorAll('.card-gallery-dot'));
+      let photoIdx = 0;
+      function showPhoto(i) {
+        photoIdx = (i + photos.length) % photos.length;
+        imgEl.src = photos[photoIdx];
+        dots.forEach((dot, di) => dot.classList.toggle('is-active', di === photoIdx));
+      }
+      col.querySelector('.card-gallery-prev').addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        showPhoto(photoIdx - 1);
+      });
+      col.querySelector('.card-gallery-next').addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        showPhoto(photoIdx + 1);
+      });
+    }
+
     // "Add to Cart" now lives inside Quick View (and the full product page)
     // instead of sitting under every card, so wire the Quick View trigger to
     // open the shared modal pre-filled with this exact product's data.
@@ -65,44 +102,103 @@
     return col;
   }
 
+
   // --- Quick View modal (shared markup already in the page; we just
   // populate it per-product and show/hide it ourselves, since the theme's
   // own main.js only binds .js-show-modal1 clicks on whatever was in the
   // DOM at page load — not the cards we render here afterwards). ---
   let quickViewProduct = null;
 
-  // The theme's Quick View gallery is built for 3 photos (slick carousel +
-  // thumbnail dots + prev/next arrows), but our product data only ever has
-  // one photo per product. Slick renders its dots once, at page load, from
-  // whatever demo images were in the static markup - just overwriting the
-  // <img> tags afterwards doesn't update those dots, and cycling the arrows
-  // between 3 copies of the same photo looks like "the arrows don't work".
-  // So instead: collapse the gallery down to the single real photo and hide
-  // the dots/arrows, since there's nothing to actually navigate between.
-  function setSingleGalleryImage(wrap, src) {
-    if (!wrap) return;
-    const slidesTrack = wrap.querySelector('.slick3');
-    const slides = wrap.querySelectorAll('.item-slick3');
-    if (slides.length > 1) {
-      if (window.jQuery && slidesTrack && window.jQuery(slidesTrack).hasClass('slick-initialized')) {
-        window.jQuery(slidesTrack).slick('unslick');
-      }
-      for (let i = 1; i < slides.length; i++) slides[i].remove();
-      const dots = wrap.querySelector('.wrap-slick3-dots');
-      const arrows = wrap.querySelector('.wrap-slick3-arrows');
-      if (dots) dots.style.display = 'none';
-      if (arrows) arrows.style.display = 'none';
-      // .slick3 is normally 83.33% wide to leave room for the (now hidden)
-      // dots column - reclaim that space so the single photo fills the row.
-      if (slidesTrack) slidesTrack.style.width = '100%';
-    }
-    const slide = wrap.querySelector('.item-slick3');
-    if (!slide) return;
+  // Builds one <div class="item-slick3"> gallery slide (photo + expand-to-
+  // lightbox link) for a given image src. Built with DOM APIs rather than
+  // innerHTML so an image URL can never be interpreted as markup.
+  function buildGallerySlide(src) {
+    const slide = document.createElement('div');
+    slide.className = 'item-slick3';
     slide.setAttribute('data-thumb', src);
-    const img = slide.querySelector('img');
-    if (img) img.src = src;
-    const lightboxLink = slide.querySelector('a[href]');
-    if (lightboxLink) lightboxLink.setAttribute('href', src);
+
+    const picWrap = document.createElement('div');
+    picWrap.className = 'wrap-pic-w pos-relative';
+
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = 'IMG-PRODUCT';
+
+    const lightboxLink = document.createElement('a');
+    lightboxLink.className = 'flex-c-m size-108 how-pos1 bor0 fs-16 cl10 bg0 hov-btn3 trans-04';
+    lightboxLink.href = src;
+    const icon = document.createElement('i');
+    icon.className = 'fa fa-expand';
+    lightboxLink.appendChild(icon);
+
+    picWrap.appendChild(img);
+    picWrap.appendChild(lightboxLink);
+    slide.appendChild(picWrap);
+    return slide;
+  }
+
+  // Rebuilds the Quick View gallery (photo carousel + thumbnail dots +
+  // prev/next arrows) from the clicked product's actual photo list. The
+  // theme's static markup ships with 3 demo slides and Slick renders its
+  // dots/arrows once at page load from whatever was there then, so simply
+  // overwriting the <img> tags afterwards wouldn't update the slide count.
+  // Instead: tear down any existing Slick instance, replace the slides to
+  // match this product's real photos, and re-init Slick only if there's
+  // more than one (a single photo has nothing to navigate between, so the
+  // dots/arrows stay hidden and it just fills the row).
+  function renderGallery(wrap, images) {
+    if (!wrap) return;
+    const track = wrap.querySelector('.slick3');
+    if (!track) return;
+    const dotsBox = wrap.querySelector('.wrap-slick3-dots');
+    const arrowsBox = wrap.querySelector('.wrap-slick3-arrows');
+
+    if (window.jQuery && window.jQuery(track).hasClass('slick-initialized')) {
+      window.jQuery(track).slick('unslick');
+    }
+
+    track.innerHTML = '';
+    images.forEach((src) => track.appendChild(buildGallerySlide(src)));
+
+    const multi = images.length > 1;
+    if (dotsBox) dotsBox.style.display = multi ? '' : 'none';
+    if (arrowsBox) arrowsBox.style.display = multi ? '' : 'none';
+    // .slick3 is normally 83.33% wide to leave room for the dots column -
+    // reclaim that space when there's only one photo to show.
+    track.style.width = multi ? '' : '100%';
+
+    if (multi && window.jQuery && window.jQuery.fn.slick) {
+      window.jQuery(track).slick({
+        slidesToShow: 1,
+        slidesToScroll: 1,
+        fade: true,
+        infinite: true,
+        autoplay: false,
+        autoplaySpeed: 6000,
+
+        arrows: true,
+        appendArrows: window.jQuery(wrap).find('.wrap-slick3-arrows'),
+        prevArrow: '<button class="arrow-slick3 prev-slick3"><i class="fa fa-angle-left" aria-hidden="true"></i></button>',
+        nextArrow: '<button class="arrow-slick3 next-slick3"><i class="fa fa-angle-right" aria-hidden="true"></i></button>',
+
+        dots: true,
+        appendDots: window.jQuery(wrap).find('.wrap-slick3-dots'),
+        dotsClass: 'slick3-dots',
+        customPaging: function (slick, index) {
+          const portrait = window.jQuery(slick.$slides[index]).data('thumb');
+          return '<img src=" ' + portrait + ' "/><div class="slick3-dot-overlay"></div>';
+        },
+      });
+    }
+  }
+
+  // A product's full photo list: the admin-managed `images` gallery array
+  // if it has one, otherwise just its single cover `image`.
+  function galleryImages(product) {
+    const list = Array.isArray(product.images) && product.images.length
+      ? product.images
+      : [product.image];
+    return list.map(imageSrc);
   }
 
   // Rebuilds a Size/Color <select>'s <option> list from the product's own
@@ -110,66 +206,74 @@
   // that variant type, the whole field (label + select) is hidden instead
   // of showing an empty/meaningless dropdown, and it's no longer required
   // before adding to cart.
-  function populateVariantSelect(container, kind, values) {
-    const select = container.querySelector(`.js-variant-select[data-variant="${kind}"]`);
-    if (!select) return;
-    const row = select.closest('.flex-w.flex-r-m') || select.closest('.js-variant-wrap');
+  // Rebuilds a Size/Color picker's list of clickable chips from the
+  // product's own admin-managed sizes/colors array. If the product has
+  // none defined for that variant type, the whole column is hidden
+  // instead of showing an empty/meaningless list, and it's no longer
+  // required before adding to cart.
+  function populateVariantOptions(container, kind, values) {
+    const col = container.querySelector(`.js-variant-wrap[data-variant="${kind}"]`);
+    if (!col) return;
+    const optionsBox = col.querySelector('.js-variant-options');
+    if (!optionsBox) return;
     const list = Array.isArray(values) ? values.filter((v) => v && String(v).trim()) : [];
 
+    optionsBox.innerHTML = '';
+    optionsBox.dataset.value = '';
+    col.classList.remove('is-invalid');
+
     if (!list.length) {
-      if (row) row.style.display = 'none';
-      select.innerHTML = '<option value="">Choose an option</option>';
-      if (window.jQuery && window.jQuery(select).data('select2')) {
-        window.jQuery(select).val('').trigger('change');
-      }
+      col.style.display = 'none';
       return;
     }
 
-    if (row) row.style.display = '';
-    select.innerHTML = '<option value="">Choose an option</option>' +
-      list.map((v) => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
-    if (window.jQuery && window.jQuery(select).data('select2')) {
-      window.jQuery(select).val('').trigger('change');
-    }
+    col.style.display = '';
+    list.forEach((value) => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'variant-chip';
+      chip.textContent = value;
+      chip.dataset.value = value;
+      chip.addEventListener('click', () => {
+        optionsBox.querySelectorAll('.variant-chip').forEach((c) => c.classList.remove('is-selected'));
+        chip.classList.add('is-selected');
+        optionsBox.dataset.value = value;
+        col.classList.remove('is-invalid');
+        const errorBox = container.querySelector('.js-variant-error');
+        if (errorBox) errorBox.style.display = 'none';
+      });
+      optionsBox.appendChild(chip);
+    });
   }
 
-  // Reads the current Size/Color selection out of a Quick View (or product
-  // detail) container and validates both are actually picked — not left on
-  // the "Choose an option" placeholder. A variant is only required if the
-  // product actually has options for it (its select is visible). Shows/hides
-  // the inline error message and highlights whichever select(s) are still
-  // empty.
+  // Reads the current Size/Color pick out of a Quick View (or product
+  // detail) container and validates both are actually picked. A variant is
+  // only required if the product actually has options for it (its column
+  // is visible). Shows/hides the inline error message and highlights
+  // whichever column(s) are still unpicked.
   function readAndValidateVariant(container) {
-    const sizeSelect = container.querySelector('.js-variant-select[data-variant="size"]');
-    const colorSelect = container.querySelector('.js-variant-select[data-variant="color"]');
+    const sizeCol = container.querySelector('.js-variant-wrap[data-variant="size"]');
+    const colorCol = container.querySelector('.js-variant-wrap[data-variant="color"]');
     const errorBox = container.querySelector('.js-variant-error');
 
-    function isRequired(sel) {
-      if (!sel) return false;
-      const row = sel.closest('.flex-w.flex-r-m') || sel.closest('.js-variant-wrap');
-      return !row || row.style.display !== 'none';
+    function isRequired(col) {
+      return !!col && col.style.display !== 'none';
+    }
+    function selectedValue(col) {
+      const box = col && col.querySelector('.js-variant-options');
+      return box ? (box.dataset.value || '') : '';
     }
 
-    const sizeNeeded = isRequired(sizeSelect);
-    const colorNeeded = isRequired(colorSelect);
-    const size = sizeSelect ? sizeSelect.value : '';
-    const color = colorSelect ? colorSelect.value : '';
+    const sizeNeeded = isRequired(sizeCol);
+    const colorNeeded = isRequired(colorCol);
+    const size = selectedValue(sizeCol);
+    const color = selectedValue(colorCol);
 
-    [sizeSelect, colorSelect].forEach((sel) => {
-      if (!sel) return;
-      const wrap = sel.closest('.js-variant-wrap');
-      if (wrap) wrap.classList.remove('is-invalid');
-    });
+    [sizeCol, colorCol].forEach((col) => col && col.classList.remove('is-invalid'));
 
     if ((sizeNeeded && !size) || (colorNeeded && !color)) {
-      if (sizeNeeded && !size) {
-        const wrap = sizeSelect.closest('.js-variant-wrap');
-        if (wrap) wrap.classList.add('is-invalid');
-      }
-      if (colorNeeded && !color) {
-        const wrap = colorSelect.closest('.js-variant-wrap');
-        if (wrap) wrap.classList.add('is-invalid');
-      }
+      if (sizeNeeded && !size) sizeCol.classList.add('is-invalid');
+      if (colorNeeded && !color) colorCol.classList.add('is-invalid');
       if (errorBox) errorBox.style.display = 'block';
       return null;
     }
@@ -182,24 +286,14 @@
     return document.querySelector('.js-modal1');
   }
 
-  // Resets the Size/Color <select>s back to "Choose an option" and hides
-  // any leftover validation message from a previous product. Select2 draws
-  // its own fake dropdown over the real <select>, so setting .value alone
-  // doesn't update what the person sees — it has to go through jQuery/
-  // select2's API (when available) to refresh that display too.
+  // Resets the Size/Color pickers back to unpicked and hides any leftover
+  // validation message from a previous product.
   function resetVariantSelects(modal) {
-    const selects = modal.querySelectorAll('.js-variant-select');
-    selects.forEach((sel) => {
-      sel.value = '';
-      if (window.jQuery) {
-        const $sel = window.jQuery(sel);
-        if ($sel.data('select2')) {
-          $sel.val('').trigger('change');
-        }
-      }
-      const wrap = sel.closest('.js-variant-wrap');
-      if (wrap) wrap.classList.remove('is-invalid');
+    modal.querySelectorAll('.js-variant-options').forEach((box) => {
+      box.dataset.value = '';
+      box.querySelectorAll('.variant-chip').forEach((c) => c.classList.remove('is-selected'));
     });
+    modal.querySelectorAll('.js-variant-wrap').forEach((col) => col.classList.remove('is-invalid'));
     const errorBox = modal.querySelector('.js-variant-error');
     if (errorBox) errorBox.style.display = 'none';
   }
@@ -218,11 +312,10 @@
     if (priceEl) priceEl.textContent = money(product.price);
     if (qtyInput) qtyInput.value = 1;
     resetVariantSelects(modal);
-    populateVariantSelect(modal, 'size', product.sizes);
-    populateVariantSelect(modal, 'color', product.colors);
+    populateVariantOptions(modal, 'size', product.sizes);
+    populateVariantOptions(modal, 'color', product.colors);
 
-    const src = imageSrc(product.image);
-    setSingleGalleryImage(modal.querySelector('.wrap-slick3'), src);
+    renderGallery(modal.querySelector('.wrap-slick3'), galleryImages(product));
 
     const outOfStock = product.inStock === false;
     if (addBtn) {
@@ -247,18 +340,6 @@
     const addBtn = modal.querySelector('.js-addcart-detail');
     const qtyInput = modal.querySelector('.num-product');
     if (!addBtn) return;
-
-    // Clear a select's own invalid state as soon as the person picks
-    // something, rather than waiting for the next Add to Cart click.
-    modal.querySelectorAll('.js-variant-select').forEach((sel) => {
-      const clear = () => {
-        if (!sel.value) return;
-        const wrap = sel.closest('.js-variant-wrap');
-        if (wrap) wrap.classList.remove('is-invalid');
-      };
-      sel.addEventListener('change', clear);
-      if (window.jQuery) window.jQuery(sel).on('change', clear);
-    });
 
     addBtn.addEventListener('click', () => {
       if (!quickViewProduct || !window.ZazCart) return;

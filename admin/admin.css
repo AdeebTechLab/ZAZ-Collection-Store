@@ -37,12 +37,18 @@
   --success: #4caf50;
 }
 * { box-sizing: border-box; }
+html {
+  overflow-x: hidden;
+  width: 100%;
+}
 body {
   margin: 0;
   background: var(--bg);
   font-family: Poppins-Regular, sans-serif;
   color: var(--text);
   font-size: 14px;
+  overflow-x: hidden;
+  width: 100%;
 }
 .hidden { display: none !important; }
 
@@ -160,6 +166,7 @@ body {
 [ Dashboard hero banner ]*/
 .dashboard-hero {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 24px;
@@ -169,7 +176,7 @@ body {
   margin-bottom: 26px;
   border-radius: 14px;
 }
-.dashboard-hero-text { max-width: 620px; }
+.dashboard-hero-text { max-width: 620px; min-width: 0; }
 .dashboard-hero-eyebrow {
   font-family: PlayfairDisplay-Bold, serif;
   font-style: italic;
@@ -556,6 +563,14 @@ body {
 .variant-add-row input[type="text"] { flex: 1; }
 .variant-add-btn { white-space: nowrap; }
 
+.gallery-empty-hint {
+  font-family: Poppins-Regular, sans-serif;
+  font-size: 12px;
+  color: var(--muted);
+  font-style: italic;
+  padding: 4px 0;
+}
+
 .delete-product-btn { align-self: flex-start; }
 
 .product-order-controls {
@@ -602,8 +617,10 @@ body {
   background: #fff;
   width: 100%;
   max-width: 560px;
+  min-width: 0;
   max-height: 92vh;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -706,10 +723,12 @@ body {
 .category-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
 }
 .category-row .crop-field {
   flex: 1;
+  min-width: 140px;
 }
 .category-row .crop-field input { width: 100%; }
 .category-row-delete-btn {
@@ -741,9 +760,11 @@ body {
 .btn-icon-light:disabled { opacity: 0.35; cursor: not-allowed; }
 .category-delete-confirm {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   flex: 1;
+  min-width: 0;
   background: var(--danger-bg);
   border: 1px solid rgba(192, 57, 43, 0.25);
   padding: 8px 10px;
@@ -752,10 +773,11 @@ body {
   font-family: Poppins-Regular, sans-serif;
   font-size: 12px;
   color: var(--danger);
-  white-space: nowrap;
+  white-space: normal;
 }
 .category-delete-confirm input {
   flex: 1;
+  min-width: 90px;
   padding: 8px 10px;
   border-radius: 0;
   border: 1px solid var(--border-dark);
@@ -817,7 +839,7 @@ body {
   .main { padding: 20px 20px 50px; }
   .topbar { padding: 14px 20px; }
   .banner { margin: 16px 20px 0; }
-  .products-grid {
+  .category-products-grid {
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 16px;
   }
@@ -825,6 +847,14 @@ body {
 
 /* Tablet portrait / large phones — stack the toolbar and let the topbar wrap */
 @media (max-width: 720px) {
+  .dashboard-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 26px 24px;
+  }
+  .dashboard-hero-badge { align-self: stretch; text-align: left; }
+
   .topbar {
     flex-wrap: wrap;
     row-gap: 10px;
@@ -842,6 +872,7 @@ body {
     align-items: stretch;
   }
   .toolbar-left .btn,
+  .admin-search-wrap,
   .category-filter-select {
     width: 100%;
   }
@@ -866,7 +897,7 @@ body {
   .topbar-right .btn { flex: 1 1 auto; }
   .save-status { width: 100%; text-align: left; order: -1; }
 
-  .products-grid {
+  .category-products-grid {
     grid-template-columns: 1fr;
     gap: 14px;
   }
@@ -912,4 +943,119 @@ body {
   .crop-field input {
     font-size: 16px;
   }
+}
+
+/* --- Manage Gallery modal (standalone site gallery, gallery.html) ---
+   Each card is a full standalone gallery photo with its own caption. */
+.site-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.site-gallery-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.site-gallery-photo {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f3f3f3;
+  border: 1px solid var(--border-dark);
+  transition: border-color 0.2s;
+}
+.site-gallery-photo.is-featured { border: 2px solid var(--brand); }
+.site-gallery-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.site-gallery-featured-badge {
+  display: none;
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  z-index: 2;
+  padding: 3px 8px;
+  border-radius: 20px;
+  background: var(--brand);
+  color: #fff;
+  font-family: Poppins-Medium, sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.site-gallery-photo.is-featured .site-gallery-featured-badge { display: inline-block; }
+.site-gallery-feature { font-size: 13px !important; }
+.site-gallery-feature:hover:not(:disabled) { color: var(--brand); }
+.site-gallery-feature:disabled { color: var(--brand); opacity: 1 !important; cursor: default; }
+.site-gallery-remove {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(20, 20, 20, 0.78);
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.2s;
+}
+.site-gallery-remove:hover { background: var(--danger); }
+.site-gallery-controls {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0));
+}
+.site-gallery-controls button {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.2s, opacity 0.2s;
+}
+.site-gallery-controls button:hover:not(:disabled) { background: rgba(255, 255, 255, 0.25); }
+.site-gallery-controls button:disabled { opacity: 0.3; cursor: not-allowed; }
+.site-gallery-caption-input {
+  width: 100%;
+  font-family: Poppins-Regular, sans-serif;
+  font-size: 12px;
+  padding: 6px 8px;
+  border: 1px solid var(--border-dark);
+  border-radius: 5px;
+  color: #333;
+}
+.site-gallery-caption-input:focus { outline: none; border-color: var(--brand); }
+.site-gallery-add-tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.site-gallery-add-tile input { display: none; }
+
+@media (max-width: 600px) {
+  .site-gallery-caption-input { font-size: 16px; }
 }

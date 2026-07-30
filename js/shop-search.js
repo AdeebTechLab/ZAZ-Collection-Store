@@ -63,6 +63,15 @@
       jQuery(grid)
         .isotope('reloadItems')
         .isotope({
+          // Isotope's default 0.4s move animation looks fine for a single
+          // filter click, but live-as-you-type search re-triggers this on
+          // every keystroke — with the animation on, cards (and their
+          // photos) are constantly mid-slide, which reads as jittery
+          // movement over the images. Instant repositioning while
+          // searching removes that without touching the normal
+          // click-a-category filter behavior in js/main.js /
+          // js/category-labels.js, which don't set this option.
+          transitionDuration: 0,
           filter: term
             ? function () { return scoreItem(itemName(this), term) >= 0; }
             : '*',

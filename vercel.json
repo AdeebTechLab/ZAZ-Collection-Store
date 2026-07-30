@@ -8,6 +8,12 @@
     },
     "api/coupons.js": {
       "includeFiles": "data/**"
+    },
+    "api/settings.js": {
+      "includeFiles": "data/**"
+    },
+    "api/gallery.js": {
+      "includeFiles": "data/**"
     }
   }
 }

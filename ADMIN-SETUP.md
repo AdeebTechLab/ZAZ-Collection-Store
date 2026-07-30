@@ -57,8 +57,12 @@ effect.
 3. Products are grouped into a section per category automatically. Use
    **+ Add Product** to add a new item, or edit any existing card's name,
    category, price, sizes, colors, and availability directly in the fields.
-4. Click **Change Photo** on any product to upload a new photo — it's
-   resized automatically so uploads stay small and fast.
+4. Click **Change Photo** on any product to upload a new cover photo — it's
+   resized automatically so uploads stay small and fast. Use **+ Add Photo**
+   under **Additional Gallery Photos** to add up to 5 more photos of the
+   same product; they show up together with the cover as a swipeable photo
+   slider (with a zoom/lightbox) on that product's page. Click the **×** on
+   any extra photo's thumbnail to remove it.
 5. Toggle **Apply a discount** to show a crossed-out old price next to the
    current price on the storefront.
 6. Toggle **In Stock** off to automatically show an "Out of Stock" badge on
@@ -73,8 +77,11 @@ effect.
    **+ Manage Categories** (rename, add, delete, or reorder them; the
    default set is Summer Wear / Winter Wear / Ethnic Wear / Casual Wear /
    Party Wear, but this is fully editable).
-9. Click **Delete** on a product card to remove it.
-10. Click **Save Changes** at the top. The public site updates right away.
+9. Use **+ Delivery Charge** to set a single flat delivery fee (in Rs.)
+   added to every order's total on the cart page and in the WhatsApp
+   checkout message — leave it at 0 for free delivery.
+10. Click **Delete** on a product card to remove it.
+11. Click **Save Changes** at the top. The public site updates right away.
 
 ## Notes & limits
 

@@ -7,18 +7,8 @@
     "oldPrice": null,
     "image": "embroidered-lawn-kurti.webp",
     "inStock": true,
-    "sizes": [
-      "S",
-      "M",
-      "L",
-      "XL"
-    ],
-    "colors": [
-      "Red",
-      "Blue",
-      "White",
-      "Grey"
-    ]
+    "sizes": [],
+    "colors": []
   },
   {
     "id": 2,
@@ -28,18 +18,8 @@
     "oldPrice": null,
     "image": "chiffon-party-wear-kurti.webp",
     "inStock": true,
-    "sizes": [
-      "S",
-      "M",
-      "L",
-      "XL"
-    ],
-    "colors": [
-      "Red",
-      "Blue",
-      "White",
-      "Grey"
-    ]
+    "sizes": [],
+    "colors": []
   },
   {
     "id": 3,
@@ -49,18 +29,8 @@
     "oldPrice": null,
     "image": "cotton-chino-trouser.webp",
     "inStock": true,
-    "sizes": [
-      "S",
-      "M",
-      "L",
-      "XL"
-    ],
-    "colors": [
-      "Red",
-      "Blue",
-      "White",
-      "Grey"
-    ]
+    "sizes": [],
+    "colors": []
   },
   {
     "id": 4,
@@ -70,18 +40,8 @@
     "oldPrice": null,
     "image": "wool-blend-trench-coat.webp",
     "inStock": true,
-    "sizes": [
-      "S",
-      "M",
-      "L",
-      "XL"
-    ],
-    "colors": [
-      "Red",
-      "Blue",
-      "White",
-      "Grey"
-    ]
+    "sizes": [],
+    "colors": []
   },
   {
     "id": 5,
@@ -91,18 +51,8 @@
     "oldPrice": null,
     "image": "front-pocket-cardigan.webp",
     "inStock": true,
-    "sizes": [
-      "S",
-      "M",
-      "L",
-      "XL"
-    ],
-    "colors": [
-      "Red",
-      "Blue",
-      "White",
-      "Grey"
-    ]
+    "sizes": [],
+    "colors": []
   },
   {
     "id": 6,
@@ -112,18 +62,8 @@
     "oldPrice": null,
     "image": "embroidered-party-wear-suit.webp",
     "inStock": true,
-    "sizes": [
-      "S",
-      "M",
-      "L",
-      "XL"
-    ],
-    "colors": [
-      "Red",
-      "Blue",
-      "White",
-      "Grey"
-    ]
+    "sizes": [],
+    "colors": []
   },
   {
     "id": 7,
@@ -133,18 +73,8 @@
     "oldPrice": null,
     "image": "stretch-cotton-kurti.webp",
     "inStock": true,
-    "sizes": [
-      "S",
-      "M",
-      "L",
-      "XL"
-    ],
-    "colors": [
-      "Red",
-      "Blue",
-      "White",
-      "Grey"
-    ]
+    "sizes": [],
+    "colors": []
   },
   {
     "id": 8,
@@ -154,18 +84,8 @@
     "oldPrice": null,
     "image": "metallic-print-chiffon-top.webp",
     "inStock": true,
-    "sizes": [
-      "S",
-      "M",
-      "L",
-      "XL"
-    ],
-    "colors": [
-      "Red",
-      "Blue",
-      "White",
-      "Grey"
-    ]
+    "sizes": [],
+    "colors": []
   },
   {
     "id": 9,
@@ -175,18 +95,8 @@
     "oldPrice": null,
     "image": "casual-printed-cotton-coord-set.webp",
     "inStock": true,
-    "sizes": [
-      "S",
-      "M",
-      "L",
-      "XL"
-    ],
-    "colors": [
-      "Red",
-      "Blue",
-      "White",
-      "Grey"
-    ]
+    "sizes": [],
+    "colors": []
   },
   {
     "id": 10,
@@ -196,18 +106,8 @@
     "oldPrice": null,
     "image": "striped-cotton-tshirt.webp",
     "inStock": true,
-    "sizes": [
-      "S",
-      "M",
-      "L",
-      "XL"
-    ],
-    "colors": [
-      "Red",
-      "Blue",
-      "White",
-      "Grey"
-    ]
+    "sizes": [],
+    "colors": []
   },
   {
     "id": 11,
@@ -217,18 +117,8 @@
     "oldPrice": null,
     "image": "cable-knit-wool-sweater.webp",
     "inStock": true,
-    "sizes": [
-      "S",
-      "M",
-      "L",
-      "XL"
-    ],
-    "colors": [
-      "Red",
-      "Blue",
-      "White",
-      "Grey"
-    ]
+    "sizes": [],
+    "colors": []
   },
   {
     "id": 12,
@@ -238,18 +128,8 @@
     "oldPrice": null,
     "image": "quilted-winter-puffer-jacket.webp",
     "inStock": true,
-    "sizes": [
-      "S",
-      "M",
-      "L",
-      "XL"
-    ],
-    "colors": [
-      "Red",
-      "Blue",
-      "White",
-      "Grey"
-    ]
+    "sizes": [],
+    "colors": []
   },
   {
     "id": 13,
@@ -259,18 +139,8 @@
     "oldPrice": null,
     "image": "full-sleeve-cotton-tshirt.webp",
     "inStock": true,
-    "sizes": [
-      "S",
-      "M",
-      "L",
-      "XL"
-    ],
-    "colors": [
-      "Red",
-      "Blue",
-      "White",
-      "Grey"
-    ]
+    "sizes": [],
+    "colors": []
   },
   {
     "id": 14,
@@ -280,18 +150,8 @@
     "oldPrice": null,
     "image": "embellished-party-dress.webp",
     "inStock": true,
-    "sizes": [
-      "S",
-      "M",
-      "L",
-      "XL"
-    ],
-    "colors": [
-      "Red",
-      "Blue",
-      "White",
-      "Grey"
-    ]
+    "sizes": [],
+    "colors": []
   },
   {
     "id": 15,
@@ -301,18 +161,8 @@
     "oldPrice": null,
     "image": "sequin-embellished-party-gown.webp",
     "inStock": true,
-    "sizes": [
-      "S",
-      "M",
-      "L",
-      "XL"
-    ],
-    "colors": [
-      "Red",
-      "Blue",
-      "White",
-      "Grey"
-    ]
+    "sizes": [],
+    "colors": []
   },
   {
     "id": 16,
@@ -322,18 +172,8 @@
     "oldPrice": null,
     "image": "square-neck-blouse.webp",
     "inStock": true,
-    "sizes": [
-      "S",
-      "M",
-      "L",
-      "XL"
-    ],
-    "colors": [
-      "Red",
-      "Blue",
-      "White",
-      "Grey"
-    ]
+    "sizes": [],
+    "colors": []
   },
   {
     "id": 17,
@@ -344,18 +184,8 @@
     "image": "long-sleeve-tshirt.webp",
     "saleTag": "20% Off",
     "inStock": true,
-    "sizes": [
-      "S",
-      "M",
-      "L",
-      "XL"
-    ],
-    "colors": [
-      "Red",
-      "Blue",
-      "White",
-      "Grey"
-    ]
+    "sizes": [],
+    "colors": []
   },
   {
     "id": 18,
@@ -366,18 +196,8 @@
     "image": "grey-check-coat.webp",
     "saleTag": "18% Off",
     "inStock": true,
-    "sizes": [
-      "S",
-      "M",
-      "L",
-      "XL"
-    ],
-    "colors": [
-      "Red",
-      "Blue",
-      "White",
-      "Grey"
-    ]
+    "sizes": [],
+    "colors": []
   },
   {
     "id": 19,
@@ -388,18 +208,8 @@
     "image": "silk-white-shirt.webp",
     "saleTag": "22% Off",
     "inStock": true,
-    "sizes": [
-      "S",
-      "M",
-      "L",
-      "XL"
-    ],
-    "colors": [
-      "Red",
-      "Blue",
-      "White",
-      "Grey"
-    ]
+    "sizes": [],
+    "colors": []
   },
   {
     "id": 20,
@@ -410,17 +220,7 @@
     "image": "blue-jeans-pant.webp",
     "saleTag": "22% Off",
     "inStock": true,
-    "sizes": [
-      "S",
-      "M",
-      "L",
-      "XL"
-    ],
-    "colors": [
-      "Red",
-      "Blue",
-      "White",
-      "Grey"
-    ]
+    "sizes": [],
+    "colors": []
   }
 ]

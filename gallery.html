@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<title>About</title>
+	<title>Gallery</title>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 <!--===============================================================================================-->	
@@ -28,6 +28,8 @@
 <!--===============================================================================================-->
 	<link rel="stylesheet" type="text/css" href="vendor/perfect-scrollbar/perfect-scrollbar.css">
 <!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="vendor/slick/slick.css">
+	<link rel="stylesheet" type="text/css" href="vendor/MagnificPopup/magnific-popup.css">
 	<link rel="stylesheet" type="text/css" href="css/util.css">
 	<link rel="stylesheet" type="text/css" href="css/main.css">
 	<link rel="stylesheet" type="text/css" href="css/shop-additions.css">
@@ -62,11 +64,11 @@
 								<a href="shoping-cart.html">Features</a>
 							</li>
 
-							<li>
+							<li class="active-menu">
 								<a href="gallery.html">Gallery</a>
 							</li>
 
-							<li class="active-menu">
+							<li>
 								<a href="about.html">About</a>
 							</li>
 
@@ -191,9 +193,9 @@
 
 
 	<!-- Title page -->
-	<section class="bg-img1 bg-overlay1 pos-relative txt-center p-lr-15 hero-page-title" style="background-image: url('images/slide-01.webp');">
+	<section class="bg-img1 bg-overlay1 pos-relative txt-center p-lr-15 hero-page-title" style="background-image: url('images/deal-of-week-hero.webp');">
 		<h2 class="ltext-105 cl0 txt-center">
-			About
+			Gallery
 		</h2>
 	</section>	
 
@@ -201,64 +203,22 @@
 	<!-- Content page -->
 	<section class="bg0 p-t-75 p-b-120">
 		<div class="container">
-			<div class="row p-b-148">
-				<div class="col-md-7 col-lg-8">
-					<div class="p-t-7 p-r-85 p-r-15-lg p-r-0-md">
-						<h3 class="mtext-111 cl2 p-b-16">
-							Our Story
-						</h3>
-
-						<p class="stext-113 cl6 p-b-26">
-							ZAZ Collection started right here in Bahawalpur with a simple idea: bring well-made, comfortable everyday and occasion wear to Pakistani women without the markup of big-name boutiques. What began as a small hand-picked collection of lawn and cotton pieces has grown into a full wardrobe of kurtis, tops, dresses, and outerwear, all chosen with the same eye for fabric, fit, and finishing we started with.
-						</p>
-
-						<p class="stext-113 cl6 p-b-26">
-							Every piece we carry is checked for stitching quality, fabric weight, and colorfastness before it goes up on the site, because we'd rather list fewer things and have customers trust every one of them. From breathable lawn kurtis for hot Punjab summers to wool-blend coats for winter up north, we stock pieces that fit how our customers actually live and dress — not just whatever happens to be trending that season.
-						</p>
-
-						<p class="stext-113 cl6 p-b-26">
-							Any questions? Let us know in store at Noon House, Khadija Tul Kubra Madrsa, A to Z Mart, 2nd Street End, Adeeb Technology Lab, Bahawalpur 63100 or call us on +92 307 6321109
-						</p>
-					</div>
-				</div>
-
-				<div class="col-11 col-md-5 col-lg-4 m-lr-auto">
-					<div>
-						<div class="hov-img0">
-							<img src="images/about-01.webp" alt="IMG">
-						</div>
-					</div>
+			<div class="row p-b-45 txt-center">
+				<div class="col-12">
+					<p class="stext-113 cl6" style="max-width:640px; margin:0 auto;">
+						A look at ZAZ Collection in real life — style, fit, and fabric, straight from the store.
+					</p>
 				</div>
 			</div>
-			
-			<div class="row">
-				<div class="order-md-2 col-md-7 col-lg-8 p-b-30">
-					<div class="p-t-7 p-l-85 p-l-15-lg p-l-0-md">
-						<h3 class="mtext-111 cl2 p-b-16">
-							Our Mission
-						</h3>
 
-						<p class="stext-113 cl6 p-b-26">
-							Our mission is simple: make it easy for women across Pakistan to find clothes that fit well, wear well, and don't cost more than they should. We work directly with local stitching units and fabric suppliers so we can keep quality high and prices fair, and we stand behind every order with easy returns and real customer support — not just a contact form that goes nowhere. Whether it's a cotton kurti for daily wear or an embellished piece for a wedding season, we want it to still look and feel good the tenth time you wear it, not just the first.
-						</p>
-
-						<div class="bor16 p-l-29 p-b-9 m-t-22">
-							<p class="stext-114 cl6 p-r-40 p-b-11">
-								Good clothes shouldn't need an occasion — they should fit your life first, and your wardrobe second.
-							</p>
-
-							<span class="stext-111 cl8">
-								- ZAZ Collection
-							</span>
-						</div>
-					</div>
-				</div>
-
-				<div class="order-md-1 col-11 col-md-5 col-lg-4 m-lr-auto p-b-30">
-					<div>
-						<div class="hov-img0">
-							<img src="images/about-02.webp" alt="IMG">
-						</div>
+			<!-- Populated by js/gallery-render.js from /api/gallery as a Slick
+			     carousel — one photo showing at a time, sliding left on Next and
+			     right on Prev. Each slide also has an expand icon so MagnificPopup
+			     (already used elsewhere on the site) can still open it full-size. -->
+			<div class="gallery-slider-wrap">
+				<div id="gallery-grid" class="gallery-slick">
+					<div class="txt-center stext-107 cl6 p-tb-40 js-gallery-loading">
+						Loading gallery…
 					</div>
 				</div>
 			</div>
@@ -407,6 +367,8 @@ Copyright &copy;<script>document.write(new Date().getFullYear());</script> ZAZ C
 <!--===============================================================================================-->
 	<script src="vendor/MagnificPopup/jquery.magnific-popup.min.js"></script>
 <!--===============================================================================================-->
+	<script src="vendor/slick/slick.min.js"></script>
+<!--===============================================================================================-->
 	<script src="vendor/perfect-scrollbar/perfect-scrollbar.min.js"></script>
 	<script>
 		$('.js-pscroll').each(function(){
@@ -427,6 +389,7 @@ Copyright &copy;<script>document.write(new Date().getFullYear());</script> ZAZ C
 	<script src="js/main.js"></script>
 	<script src="js/cart.js"></script>
 	<script src="js/wishlist.js"></script>
+	<script src="js/gallery-render.js"></script>
 	
 </body>
 </html>

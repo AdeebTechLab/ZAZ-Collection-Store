@@ -69,6 +69,10 @@
 							</li>
 
 							<li>
+								<a href="gallery.html">Gallery</a>
+							</li>
+
+							<li>
 								<a href="about.html">About</a>
 							</li>
 
@@ -132,6 +136,10 @@
 
 				<li>
 					<a href="shoping-cart.html" class="label1 rs1" data-label1="hot">Features</a>
+				</li>
+
+				<li>
+					<a href="gallery.html">Gallery</a>
 				</li>
 
 				<li>
@@ -930,41 +938,15 @@
 
 							<!--  -->
 							<div class="p-t-33">
-								<div class="flex-w flex-r-m p-b-10">
-									<div class="size-203 flex-c-m respon6">
-										Size
+								<div class="variant-picker-row flex-w">
+									<div class="variant-picker-col js-variant-wrap" data-variant="size">
+										<div class="variant-picker-label stext-102 cl2">Size</div>
+										<div class="variant-picker-options js-variant-options" data-variant="size"></div>
 									</div>
 
-									<div class="size-204 respon6-next">
-										<div class="rs1-select2 bor8 bg0 js-variant-wrap" data-variant="size">
-											<select class="js-select2 js-variant-select" data-variant="size" name="size">
-												<option value="">Choose an option</option>
-												<option>Size S</option>
-												<option>Size M</option>
-												<option>Size L</option>
-												<option>Size XL</option>
-											</select>
-											<div class="dropDownSelect2"></div>
-										</div>
-									</div>
-								</div>
-
-								<div class="flex-w flex-r-m p-b-10">
-									<div class="size-203 flex-c-m respon6">
-										Color
-									</div>
-
-									<div class="size-204 respon6-next">
-										<div class="rs1-select2 bor8 bg0 js-variant-wrap" data-variant="color">
-											<select class="js-select2 js-variant-select" data-variant="color" name="color">
-												<option value="">Choose an option</option>
-												<option>Red</option>
-												<option>Blue</option>
-												<option>White</option>
-												<option>Grey</option>
-											</select>
-											<div class="dropDownSelect2"></div>
-										</div>
+									<div class="variant-picker-col js-variant-wrap" data-variant="color">
+										<div class="variant-picker-label stext-102 cl2">Color</div>
+										<div class="variant-picker-options js-variant-options" data-variant="color"></div>
 									</div>
 								</div>
 
@@ -993,26 +975,19 @@
 								</div>	
 							</div>
 
-							<!--  -->
-							<div class="flex-w flex-m p-l-100 p-t-40 respon7">
-								<div class="flex-m bor9 p-r-10 m-r-11">
-									<a href="#" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 js-addwish-detail tooltip100" data-tooltip="Add to Wishlist">
-										<i class="zmdi zmdi-favorite"></i>
+							<!-- From Our Gallery preview + link to the full gallery -->
+							<div class="modal-gallery-preview p-t-33">
+								<div class="modal-gallery-preview-head flex-w flex-sb-m p-b-16">
+									<span class="mtext-102 cl2">From Our Gallery</span>
+									<a href="gallery.html" class="modal-gallery-preview-link stext-101 cl2 hov-cl1 trans-04">
+										View Full Gallery <i class="fa fa-angle-right" aria-hidden="true"></i>
 									</a>
 								</div>
-
-								<a href="https://www.facebook.com/" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 m-r-8 tooltip100" data-tooltip="Facebook" target="_blank" rel="noopener noreferrer">
-									<i class="fa fa-facebook"></i>
-								</a>
-
-								<a href="https://twitter.com/" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 m-r-8 tooltip100" data-tooltip="Twitter" target="_blank" rel="noopener noreferrer">
-									<i class="fa fa-twitter"></i>
-								</a>
-
-								<a href="https://wa.me/923076321109" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 m-r-8 tooltip100" data-tooltip="WhatsApp" target="_blank" rel="noopener noreferrer">
-									<i class="fa fa-whatsapp"></i>
-								</a>
+								<div class="modal-gallery-preview-slider-wrap">
+									<div class="modal-gallery-preview-slick js-modal-gallery-preview"></div>
+								</div>
 							</div>
+
 						</div>
 					</div>
 				</div>
@@ -1121,6 +1096,7 @@
 	<script src="js/cart.js"></script>
 	<script src="js/wishlist.js"></script>
 	<script src="js/products-render.js"></script>
+	<script src="js/modal-gallery-preview.js"></script>
 	<script src="js/shop-search.js"></script>
 	<script src="js/category-labels.js"></script>
 

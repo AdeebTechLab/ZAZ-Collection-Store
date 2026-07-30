@@ -12,9 +12,9 @@ live on the site immediately — no rebuild or redeploy needed.
 - Admin panel: `admin/index.html` (protected by login at `admin/login.html`) — manage
   products, categories, and discount coupons.
 - Backend: `api/login.js`, `api/logout.js`, `api/session.js`, `api/products.js`,
-  `api/categories.js`, `api/coupons.js`, `api/upload.js`
+  `api/categories.js`, `api/coupons.js`, `api/settings.js`, `api/upload.js`
 - Data fallback (used if Blob hasn't been set up yet): `data/products-data.json`,
-  `data/categories-data.json`, `data/coupons-data.json`
+  `data/categories-data.json`, `data/coupons-data.json`, `data/settings-data.json`
 
 ---
 

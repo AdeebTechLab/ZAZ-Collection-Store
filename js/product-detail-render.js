@@ -15,38 +15,96 @@
     return 'images/' + image;
   }
 
-  // The theme's gallery is built for 3 photos (slick carousel + thumbnail
-  // dots + prev/next arrows), but our product data only ever has one photo
-  // per product. Slick renders its dots once, at page load, from whatever
-  // demo images were in the static markup - just overwriting the <img> tags
-  // afterwards doesn't update those dots, and cycling the arrows between 3
-  // copies of the same photo looks like "the arrows don't work". So instead:
-  // collapse the gallery down to the single real photo and hide the
-  // dots/arrows, since there's nothing to actually navigate between.
-  function setSingleGalleryImage(wrap, src) {
-    if (!wrap) return;
-    const slidesTrack = wrap.querySelector('.slick3');
-    const slides = wrap.querySelectorAll('.item-slick3');
-    if (slides.length > 1) {
-      if (window.jQuery && slidesTrack && window.jQuery(slidesTrack).hasClass('slick-initialized')) {
-        window.jQuery(slidesTrack).slick('unslick');
-      }
-      for (let i = 1; i < slides.length; i++) slides[i].remove();
-      const dots = wrap.querySelector('.wrap-slick3-dots');
-      const arrows = wrap.querySelector('.wrap-slick3-arrows');
-      if (dots) dots.style.display = 'none';
-      if (arrows) arrows.style.display = 'none';
-      // .slick3 is normally 83.33% wide to leave room for the (now hidden)
-      // dots column - reclaim that space so the single photo fills the row.
-      if (slidesTrack) slidesTrack.style.width = '100%';
-    }
-    const slide = wrap.querySelector('.item-slick3');
-    if (!slide) return;
+  // Builds one <div class="item-slick3"> gallery slide (photo + expand-to-
+  // lightbox link) for a given image src. Built with DOM APIs rather than
+  // innerHTML so an image URL can never be interpreted as markup.
+  function buildGallerySlide(src) {
+    const slide = document.createElement('div');
+    slide.className = 'item-slick3';
     slide.setAttribute('data-thumb', src);
-    const img = slide.querySelector('img');
-    if (img) img.src = src;
-    const lightboxLink = slide.querySelector('a[href]');
-    if (lightboxLink) lightboxLink.setAttribute('href', src);
+
+    const picWrap = document.createElement('div');
+    picWrap.className = 'wrap-pic-w pos-relative';
+
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = 'IMG-PRODUCT';
+
+    const lightboxLink = document.createElement('a');
+    lightboxLink.className = 'flex-c-m size-108 how-pos1 bor0 fs-16 cl10 bg0 hov-btn3 trans-04';
+    lightboxLink.href = src;
+    const icon = document.createElement('i');
+    icon.className = 'fa fa-expand';
+    lightboxLink.appendChild(icon);
+
+    picWrap.appendChild(img);
+    picWrap.appendChild(lightboxLink);
+    slide.appendChild(picWrap);
+    return slide;
+  }
+
+  // Rebuilds a product's gallery (photo carousel + thumbnail dots +
+  // prev/next arrows) from its actual photo list. The theme's static
+  // markup ships with 3 demo slides and Slick renders its dots/arrows once
+  // at page load from whatever was there then, so simply overwriting the
+  // <img> tags afterwards wouldn't update the slide count. Instead: tear
+  // down any existing Slick instance, replace the slides to match this
+  // product's real photos, and re-init Slick only if there's more than one
+  // (a single photo has nothing to navigate between, so the dots/arrows
+  // stay hidden and it just fills the row).
+  function renderGallery(wrap, images) {
+    if (!wrap) return;
+    const track = wrap.querySelector('.slick3');
+    if (!track) return;
+    const dotsBox = wrap.querySelector('.wrap-slick3-dots');
+    const arrowsBox = wrap.querySelector('.wrap-slick3-arrows');
+
+    if (window.jQuery && window.jQuery(track).hasClass('slick-initialized')) {
+      window.jQuery(track).slick('unslick');
+    }
+
+    track.innerHTML = '';
+    images.forEach((src) => track.appendChild(buildGallerySlide(src)));
+
+    const multi = images.length > 1;
+    if (dotsBox) dotsBox.style.display = multi ? '' : 'none';
+    if (arrowsBox) arrowsBox.style.display = multi ? '' : 'none';
+    // .slick3 is normally 83.33% wide to leave room for the dots column -
+    // reclaim that space when there's only one photo to show.
+    track.style.width = multi ? '' : '100%';
+
+    if (multi && window.jQuery && window.jQuery.fn.slick) {
+      window.jQuery(track).slick({
+        slidesToShow: 1,
+        slidesToScroll: 1,
+        fade: true,
+        infinite: true,
+        autoplay: false,
+        autoplaySpeed: 6000,
+
+        arrows: true,
+        appendArrows: window.jQuery(wrap).find('.wrap-slick3-arrows'),
+        prevArrow: '<button class="arrow-slick3 prev-slick3"><i class="fa fa-angle-left" aria-hidden="true"></i></button>',
+        nextArrow: '<button class="arrow-slick3 next-slick3"><i class="fa fa-angle-right" aria-hidden="true"></i></button>',
+
+        dots: true,
+        appendDots: window.jQuery(wrap).find('.wrap-slick3-dots'),
+        dotsClass: 'slick3-dots',
+        customPaging: function (slick, index) {
+          const portrait = window.jQuery(slick.$slides[index]).data('thumb');
+          return '<img src=" ' + portrait + ' "/><div class="slick3-dot-overlay"></div>';
+        },
+      });
+    }
+  }
+
+  // A product's full photo list: the admin-managed `images` gallery array
+  // if it has one, otherwise just its single cover `image`.
+  function galleryImages(product) {
+    const list = Array.isArray(product.images) && product.images.length
+      ? product.images
+      : [product.image];
+    return list.map(imageSrc);
   }
 
   async function init() {
@@ -75,92 +133,90 @@
       el.textContent = money(product.price);
     });
 
-    const src = imageSrc(product.image);
+    const images = galleryImages(product);
     document.querySelectorAll('.wrap-slick3').forEach((wrap) => {
-      setSingleGalleryImage(wrap, src);
+      renderGallery(wrap, images);
     });
 
-    function escapeHtml(str) {
-      return String(str || '').replace(/[&<>"']/g, (c) => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-      }[c]));
-    }
-
-    // Rebuilds a Size/Color <select>'s <option> list from the product's own
-    // admin-managed sizes/colors array. If the product has none defined for
-    // that variant type, the whole field is hidden instead of showing an
-    // empty/meaningless dropdown, and it's no longer required before adding
-    // to cart. Mirrors the same helper in js/products-render.js since this
-    // file has no shared module to import it from.
-    function populateVariantSelect(container, kind, values) {
-      const select = container.querySelector(`.js-variant-select[data-variant="${kind}"]`);
-      if (!select) return;
-      const row = select.closest('.flex-w.flex-r-m') || select.closest('.js-variant-wrap');
+    // Rebuilds a Size/Color picker's list of clickable chips from the
+    // product's own admin-managed sizes/colors array. If the product has
+    // none defined for that variant type, the whole column is hidden
+    // instead of showing an empty/meaningless list, and it's no longer
+    // required before adding to cart. Mirrors the same helper in
+    // js/products-render.js since this file has no shared module to
+    // import it from.
+    function populateVariantOptions(container, kind, values) {
+      const col = container.querySelector(`.js-variant-wrap[data-variant="${kind}"]`);
+      if (!col) return;
+      const optionsBox = col.querySelector('.js-variant-options');
+      if (!optionsBox) return;
       const list = Array.isArray(values) ? values.filter((v) => v && String(v).trim()) : [];
 
+      optionsBox.innerHTML = '';
+      optionsBox.dataset.value = '';
+      col.classList.remove('is-invalid');
+
       if (!list.length) {
-        if (row) row.style.display = 'none';
-        select.innerHTML = '<option value="">Choose an option</option>';
-        if (window.jQuery && window.jQuery(select).data('select2')) {
-          window.jQuery(select).val('').trigger('change');
-        }
+        col.style.display = 'none';
         return;
       }
 
-      if (row) row.style.display = '';
-      select.innerHTML = '<option value="">Choose an option</option>' +
-        list.map((v) => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
-      if (window.jQuery && window.jQuery(select).data('select2')) {
-        window.jQuery(select).val('').trigger('change');
-      }
+      col.style.display = '';
+      list.forEach((value) => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'variant-chip';
+        chip.textContent = value;
+        chip.dataset.value = value;
+        chip.addEventListener('click', () => {
+          optionsBox.querySelectorAll('.variant-chip').forEach((c) => c.classList.remove('is-selected'));
+          chip.classList.add('is-selected');
+          optionsBox.dataset.value = value;
+          col.classList.remove('is-invalid');
+          const errorBox = container.querySelector('.js-variant-error');
+          if (errorBox) errorBox.style.display = 'none';
+        });
+        optionsBox.appendChild(chip);
+      });
     }
 
     // Both the main product section and the Quick View modal on this page
-    // wrap their Size/Color selects in a ".p-t-33" block — populate each
+    // wrap their Size/Color pickers in a ".p-t-33" block — populate each
     // one from this product's own admin-managed sizes/colors.
     document.querySelectorAll('.p-t-33').forEach((container) => {
-      if (!container.querySelector('.js-variant-select')) return;
-      populateVariantSelect(container, 'size', product.sizes);
-      populateVariantSelect(container, 'color', product.colors);
+      if (!container.querySelector('.js-variant-options')) return;
+      populateVariantOptions(container, 'size', product.sizes);
+      populateVariantOptions(container, 'color', product.colors);
     });
 
-    // Reads the current Size/Color selection out of an Add to Cart button's
-    // own container and validates both are actually picked — not left on
-    // the "Choose an option" placeholder. A variant is only required if the
-    // product actually has options for it (its select is visible). Shows/
-    // hides the inline error message and highlights whichever select(s) are
-    // still empty.
+    // Reads the current Size/Color pick out of an Add to Cart button's own
+    // container and validates both are actually picked. A variant is only
+    // required if the product actually has options for it (its column is
+    // visible). Shows/hides the inline error message and highlights
+    // whichever column(s) are still unpicked.
     function readAndValidateVariant(container) {
-      const sizeSelect = container.querySelector('.js-variant-select[data-variant="size"]');
-      const colorSelect = container.querySelector('.js-variant-select[data-variant="color"]');
+      const sizeCol = container.querySelector('.js-variant-wrap[data-variant="size"]');
+      const colorCol = container.querySelector('.js-variant-wrap[data-variant="color"]');
       const errorBox = container.querySelector('.js-variant-error');
 
-      function isRequired(sel) {
-        if (!sel) return false;
-        const row = sel.closest('.flex-w.flex-r-m') || sel.closest('.js-variant-wrap');
-        return !row || row.style.display !== 'none';
+      function isRequired(col) {
+        return !!col && col.style.display !== 'none';
+      }
+      function selectedValue(col) {
+        const box = col && col.querySelector('.js-variant-options');
+        return box ? (box.dataset.value || '') : '';
       }
 
-      const sizeNeeded = isRequired(sizeSelect);
-      const colorNeeded = isRequired(colorSelect);
-      const size = sizeSelect ? sizeSelect.value : '';
-      const color = colorSelect ? colorSelect.value : '';
+      const sizeNeeded = isRequired(sizeCol);
+      const colorNeeded = isRequired(colorCol);
+      const size = selectedValue(sizeCol);
+      const color = selectedValue(colorCol);
 
-      [sizeSelect, colorSelect].forEach((sel) => {
-        if (!sel) return;
-        const wrap = sel.closest('.js-variant-wrap');
-        if (wrap) wrap.classList.remove('is-invalid');
-      });
+      [sizeCol, colorCol].forEach((col) => col && col.classList.remove('is-invalid'));
 
       if ((sizeNeeded && !size) || (colorNeeded && !color)) {
-        if (sizeNeeded && !size) {
-          const wrap = sizeSelect.closest('.js-variant-wrap');
-          if (wrap) wrap.classList.add('is-invalid');
-        }
-        if (colorNeeded && !color) {
-          const wrap = colorSelect.closest('.js-variant-wrap');
-          if (wrap) wrap.classList.add('is-invalid');
-        }
+        if (sizeNeeded && !size) sizeCol.classList.add('is-invalid');
+        if (colorNeeded && !color) colorCol.classList.add('is-invalid');
         if (errorBox) errorBox.style.display = 'block';
         return null;
       }
@@ -183,18 +239,6 @@
       // message — this is true both for the main product section and for
       // the page's (separate) Quick View modal, so this works for both.
       const container = btn.closest('.p-t-33') || btn.closest('.flex-w') || document;
-
-      // Clear a select's own invalid state as soon as the person picks
-      // something, rather than waiting for the next Add to Cart click.
-      container.querySelectorAll('.js-variant-select').forEach((sel) => {
-        const clear = () => {
-          if (!sel.value) return;
-          const wrap = sel.closest('.js-variant-wrap');
-          if (wrap) wrap.classList.remove('is-invalid');
-        };
-        sel.addEventListener('change', clear);
-        if (window.jQuery) window.jQuery(sel).on('change', clear);
-      });
 
       btn.addEventListener('click', () => {
         if (!window.ZazCart) return;

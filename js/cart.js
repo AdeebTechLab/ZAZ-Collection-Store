@@ -9,6 +9,11 @@
   const STORAGE_KEY = 'zaz_cart_v1';
   const COUPON_STORAGE_KEY = 'zaz_coupon_v1';
 
+  // Flat delivery charge (Rs.), set by the admin in the Delivery Charge
+  // panel and served from /api/settings. Cached per page load (like
+  // couponsCache below) and refreshed once on init — see loadDeliveryCharge.
+  let deliveryChargeCache = 0;
+
   function readCoupon() {
     try {
       const raw = localStorage.getItem(COUPON_STORAGE_KEY);
@@ -91,8 +96,13 @@
       if (!coupon) return 0;
       return Math.round(this.getSubtotal() * coupon.percent / 100);
     },
+    // Only charged when the cart actually has items — an empty cart has
+    // nothing to deliver.
+    getDeliveryCharge() {
+      return readCart().length ? deliveryChargeCache : 0;
+    },
     getTotal() {
-      return Math.max(0, this.getSubtotal() - this.getDiscount());
+      return Math.max(0, this.getSubtotal() - this.getDiscount()) + this.getDeliveryCharge();
     },
     applyCoupon(coupon) {
       writeCoupon(coupon);
@@ -275,6 +285,16 @@
         row.style.display = 'none';
       }
     });
+    document.querySelectorAll('.js-delivery-row').forEach((row) => {
+      const delivery = Cart.getDeliveryCharge();
+      if (items.length && delivery > 0) {
+        row.style.display = '';
+        const amountEl = row.querySelector('.js-cart-delivery');
+        if (amountEl) amountEl.textContent = money(delivery);
+      } else {
+        row.style.display = 'none';
+      }
+    });
 
     // Wire row controls (delegated once per render since we rebuild rows each time)
     tbody.querySelectorAll('.js-cart-remove').forEach((btn) => {
@@ -332,9 +352,13 @@
     const subtotal = items.reduce((sum, item) => sum + item.qty * item.price, 0);
     const coupon = Cart.getCoupon();
     const discount = Cart.getDiscount();
+    const delivery = Cart.getDeliveryCharge();
     lines.push('', `Subtotal: ${money(subtotal)}`);
     if (coupon && discount > 0) {
       lines.push(`Discount (${coupon.code} — ${coupon.percent}% off): -${money(discount)}`);
+    }
+    if (delivery > 0) {
+      lines.push(`Delivery: ${money(delivery)}`);
     }
     lines.push(`Total: ${money(Cart.getTotal())}`);
 
@@ -688,6 +712,23 @@
     }
   }
 
+  // Fetches the current admin-set delivery charge on page load and
+  // re-renders once it's in, so the header mini-cart, the full cart page,
+  // and the WhatsApp checkout message all reflect it without needing a
+  // manual reload. Defaults to 0 (free) if the request fails.
+  async function loadDeliveryCharge() {
+    try {
+      const res = await fetch('/api/settings', { cache: 'no-store' });
+      if (!res.ok) throw new Error('bad response');
+      const data = await res.json();
+      const val = Number(data.deliveryCharge);
+      deliveryChargeCache = Number.isFinite(val) && val >= 0 ? val : 0;
+    } catch {
+      deliveryChargeCache = 0;
+    }
+    renderAll();
+  }
+
   function init() {
     renderAll();
     bindCheckoutButton();
@@ -695,6 +736,7 @@
     bindCouponButton();
     bindRemoveCouponLink();
     revalidateStoredCoupon();
+    loadDeliveryCharge();
   }
 
   if (document.readyState === 'loading') {

@@ -8,6 +8,8 @@ const PRODUCTS_PATHNAME = 'products-data.json';
 // sure it's a non-empty slug-shaped string; api/categories.js is the single
 // source of truth for which categories actually exist.
 const CATEGORY_KEY_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+// Cover photo + up to 5 extra gallery photos per product.
+const MAX_GALLERY_PHOTOS = 6;
 
 function loadBundledDefault() {
   const filePath = path.join(__dirname, '..', 'data', 'products-data.json');
@@ -62,6 +64,20 @@ function validateProducts(data) {
     if (typeof product.image !== 'string' || !product.image.trim()) {
       return `Product "${product.name}" needs an image`;
     }
+    // `images` is the optional multi-photo gallery shown on the product
+    // detail page (index 0 is always kept in sync with `image`, the cover
+    // used on listing cards). Absent/empty means "just the cover photo".
+    if (product.images != null) {
+      if (!Array.isArray(product.images) || product.images.length === 0) {
+        return `Product "${product.name}" has invalid gallery photos`;
+      }
+      if (product.images.length > MAX_GALLERY_PHOTOS) {
+        return `Product "${product.name}" can have at most ${MAX_GALLERY_PHOTOS} gallery photos`;
+      }
+      if (product.images.some((s) => typeof s !== 'string' || !s.trim())) {
+        return `Product "${product.name}" has an invalid gallery photo`;
+      }
+    }
   }
   return null;
 }
@@ -112,9 +128,18 @@ module.exports = async (req, res) => {
       return;
     }
 
+    // Keep the cover (`image`, used on listing cards/cart/wishlist) in sync
+    // with the first gallery photo whenever a gallery is present, so the
+    // two can never drift apart even if a client sent them out of sync.
+    const normalized = body.map((product) =>
+      Array.isArray(product.images) && product.images.length
+        ? { ...product, image: product.images[0] }
+        : product
+    );
+
     try {
       const { put } = require('@vercel/blob');
-      await put(PRODUCTS_PATHNAME, JSON.stringify(body, null, 2), {
+      await put(PRODUCTS_PATHNAME, JSON.stringify(normalized, null, 2), {
         access: 'public',
         addRandomSuffix: false,
         allowOverwrite: true,

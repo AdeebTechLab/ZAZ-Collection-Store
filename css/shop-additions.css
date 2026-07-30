@@ -14,6 +14,65 @@
 }
 
 /*==================================================================
+[ Product grid card mini-gallery ]
+Lets a shopper flip through a product's extra photos (prev/next arrows +
+dots) right on its grid card in js/products-render.js, without needing to
+open Quick View first. Only rendered at all when a product has more than
+one photo. Arrows sit low-opacity by default and brighten on card hover,
+matching the theme's existing Quick View reveal-on-hover pattern; dots sit
+just above where the Quick View pill slides in so the two never overlap. */
+.card-gallery-arrow {
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	z-index: 6;
+	width: 26px;
+	height: 26px;
+	border: none;
+	border-radius: 50%;
+	background: rgba(0, 0, 0, 0.45);
+	color: #fff;
+	font-size: 12px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	cursor: pointer;
+	opacity: 0;
+	transition: opacity 0.3s, background 0.3s;
+}
+.block2-pic:hover .card-gallery-arrow {
+	opacity: 1;
+}
+.card-gallery-arrow:hover {
+	background: rgba(0, 0, 0, 0.8);
+}
+.card-gallery-prev { left: 8px; }
+.card-gallery-next { right: 8px; }
+
+.card-gallery-dots {
+	position: absolute;
+	bottom: 10px;
+	left: 0;
+	right: 0;
+	z-index: 6;
+	display: flex;
+	justify-content: center;
+	gap: 5px;
+}
+.card-gallery-dot {
+	width: 5px;
+	height: 5px;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.6);
+	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+	transition: background 0.3s;
+}
+.card-gallery-dot.is-active {
+	background: #fff;
+}
+
+/*==================================================================
 [ Out-of-stock cart rows ]
 Shown on shoping-cart.html when a product already sitting in someone's
 cart gets marked Out of Stock afterwards (see markOutOfStockRows in
@@ -49,13 +108,9 @@ tr.cart-row-oos .js-cart-qty {
 
 /*==================================================================
 [ Mandatory Size/Color selection (Quick View + product detail) ]
-select2 renders its own fake dropdown UI over the real <select>, so we
-flag the wrapping .rs1-select2 element (not the hidden <select> itself)
-to make the invalid state visible. */
-.js-variant-wrap.is-invalid {
-	border: 1px solid #c0392b;
-	border-radius: 2px;
-}
+The invalid state is shown via .variant-picker-col.is-invalid further
+down (red label + soft outline around the chips) — no border is added
+here, so the two styles don't stack into a double red box. */
 .js-variant-error {
 	background: #fdecea;
 	border-left: 3px solid #c0392b;
@@ -948,6 +1003,57 @@ so there's no duplicate autoplay/height jump. See index.html for the
 	object-fit: cover;
 	object-position: top center;
 }
+/* Soft gradient over the lower part of the photo so the title/subtitle
+   text stays readable regardless of how light or busy that part of the
+   photo is (the mustard slide in particular is quite pale). Sits above
+   the image but below the text/button/dots via z-index. */
+.item-slick-mobile-hero::after {
+	content: '';
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 58%;
+	background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.5) 100%);
+	pointer-events: none;
+	z-index: 1;
+}
+.mobile-hero-text {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 128px;
+	z-index: 2;
+	text-align: center;
+	padding: 0 30px;
+	opacity: 0;
+	transform: translateY(14px);
+	transition: opacity 0.6s ease 0.15s, transform 0.6s ease 0.15s;
+}
+.mobile-hero-eyebrow {
+	display: block;
+	color: #fff;
+	font-family: Poppins-Regular;
+	font-size: 13px;
+	letter-spacing: 1px;
+	text-transform: uppercase;
+	text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
+}
+.mobile-hero-heading {
+	color: #fff;
+	font-family: PlayfairDisplay-Bold;
+	font-size: 30px;
+	line-height: 1.15;
+	text-transform: uppercase;
+	margin: 8px 0 0;
+	text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+}
+/* Only the currently-shown slide (not its off-screen fade partner) fades
+   its text in, so re-entering slides get the same subtle appear each time. */
+.slick-mobile-hero .slick-slide.slick-current .mobile-hero-text {
+	opacity: 1;
+	transform: translateY(0);
+}
 .mobile-hero-cta {
 	position: absolute;
 	left: 0;
@@ -958,9 +1064,10 @@ so there's no duplicate autoplay/height jump. See index.html for the
 	z-index: 2;
 }
 /* Slick clones each slide's DOM for its infinite-loop track, which would
-   otherwise leave duplicate "Shop Now" buttons visible behind the active
-   one for a frame — hide it on any non-active clone. */
-.slick-mobile-hero .slick-slide:not(.slick-active) .mobile-hero-cta {
+   otherwise leave duplicate "Shop Now" buttons/text visible behind the
+   active one for a frame — hide them on any non-active clone. */
+.slick-mobile-hero .slick-slide:not(.slick-active) .mobile-hero-cta,
+.slick-mobile-hero .slick-slide:not(.slick-active) .mobile-hero-text {
 	display: none;
 }
 
@@ -990,4 +1097,412 @@ so there's no duplicate autoplay/height jump. See index.html for the
 }
 .slick-mobile-hero-dots li.slick-active button {
 	background: #fff;
+}
+
+/*==================================================================
+[ Size / Color variant pickers ]
+Replaces the old Size/Color <select> dropdowns on the product detail
+page and Quick View modal with two side-by-side pickable lists (chips):
+Size on the left, Color on the right. Populated per-product by
+js/product-detail-render.js and js/products-render.js from that
+product's own admin-managed `sizes` / `colors` arrays — a column is
+hidden entirely if the product has no values for that variant type. */
+.variant-picker-row {
+	gap: 30px;
+	margin-bottom: 18px;
+}
+.variant-picker-col {
+	flex: 1 1 0;
+	min-width: 0;
+}
+.variant-picker-label {
+	font-weight: 600;
+	margin-bottom: 10px;
+}
+.variant-picker-options {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+.variant-chip {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 42px;
+	height: 36px;
+	padding: 0 12px;
+	background: #fff;
+	border: 1px solid #ebebeb;
+	border-radius: 4px;
+	color: #333;
+	font-size: 13px;
+	line-height: 1;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+.variant-chip:hover {
+	border-color: #717fe0;
+	color: #717fe0;
+}
+.variant-chip.is-selected {
+	background: #717fe0;
+	border-color: #717fe0;
+	color: #fff;
+}
+.variant-picker-col.is-invalid .variant-picker-label {
+	color: #c0392b;
+}
+.variant-picker-col.is-invalid .variant-picker-options {
+	outline: 1px solid #c0392b;
+	outline-offset: 6px;
+	border-radius: 4px;
+}
+
+@media (max-width: 420px) {
+	.variant-picker-row {
+		gap: 16px;
+	}
+	.variant-chip {
+		min-width: 36px;
+		height: 32px;
+		padding: 0 9px;
+		font-size: 12px;
+	}
+}
+
+/* --- Standalone site Gallery (gallery.html) ---
+Photos + captions are fully admin-managed (Manage Gallery modal -> /api/gallery,
+see js/gallery-render.js); this just controls how they're displayed: a 3-up
+"coverflow" Slick carousel (centerMode) — the current photo is sharp and full
+size in the middle, the previous/next photos peek in on either side, dimmed
+and blurred, so it's clear what's coming up in each direction. Falls back to
+one photo at a time on small screens (see the responsive breakpoint in
+js/gallery-render.js), where the coverflow treatment doesn't have room. */
+.gallery-slider-wrap {
+	max-width: 780px;
+	margin: 0 auto;
+	overflow: hidden;
+}
+.gallery-slick {
+	position: relative;
+}
+.gallery-slick .slick-slide {
+	padding: 0 8px;
+	transition: transform 0.35s ease, opacity 0.35s ease, filter 0.35s ease;
+	opacity: 0.35;
+	filter: blur(2px);
+	transform: scale(0.86);
+}
+.gallery-slick .slick-slide.slick-center {
+	opacity: 1;
+	filter: none;
+	transform: scale(1);
+	position: relative;
+	z-index: 2;
+}
+.gallery-slide-pic {
+	display: block;
+	position: relative;
+	overflow: hidden;
+	border-radius: 4px;
+	aspect-ratio: 3 / 4;
+	max-width: 260px;
+	margin: 0 auto;
+}
+.gallery-slide-pic img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+@media (max-width: 767px) {
+	.gallery-slick .slick-slide {
+		padding: 0;
+		opacity: 1;
+		filter: none;
+		transform: none;
+	}
+	.gallery-slide-pic {
+		max-width: 320px;
+	}
+}
+.gallery-slide-expand {
+	position: absolute;
+	right: 16px;
+	bottom: 16px;
+	z-index: 5;
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	background: rgba(0, 0, 0, 0.5);
+	color: #fff;
+	font-size: 15px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: background 0.3s;
+}
+.gallery-slide-expand:hover,
+.gallery-slide-expand:focus {
+	background: rgba(0, 0, 0, 0.85);
+	color: #fff;
+}
+.gallery-slide-caption {
+	margin-bottom: 0;
+	visibility: hidden;
+}
+.slick-slide.slick-center .gallery-slide-caption {
+	visibility: visible;
+}
+
+/* Prev/next arrows - Slick's own arrow CSS isn't themed (see vendor/slick/
+slick.css), so these are supplied as customArrow HTML in gallery-render.js
+and styled here, matching the product card mini-gallery's arrow look. */
+.gallery-slick-arrow {
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	z-index: 10;
+	width: 42px;
+	height: 42px;
+	border: none;
+	border-radius: 50%;
+	background: rgba(0, 0, 0, 0.45);
+	color: #fff;
+	font-size: 16px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	cursor: pointer;
+	transition: background 0.3s;
+}
+.gallery-slick-arrow:hover {
+	background: rgba(0, 0, 0, 0.8);
+}
+.gallery-slick-prev { left: 10px; }
+.gallery-slick-next { right: 10px; }
+
+/* Dots (customPaging in gallery-render.js renders a plain <span> per dot,
+same pattern as the product card mini-gallery's .card-gallery-dot). */
+.gallery-slick-dots {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 7px;
+	margin: 18px 0 0;
+	padding: 0;
+	list-style: none;
+}
+.gallery-slick-dots li {
+	display: flex;
+}
+.gallery-slick-dots span {
+	display: block;
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: rgba(0, 0, 0, 0.2);
+	cursor: pointer;
+	transition: background 0.3s;
+}
+.gallery-slick-dots li.slick-active span {
+	background: #333;
+}
+
+/*//////////////////////////////////////////////////////////////////
+[ Quick View modal — compact photo + filmstrip thumbnail gallery ]
+Shrinks the Quick View popup's main product photo down to a card-like
+size instead of stretching across the whole modal column, and turns
+Slick's side column of thumbnail dots into a centered horizontal
+filmstrip below the photo (active thumb bigger/sharp, the rest
+smaller/blurred) — click a thumb to switch the main photo. Scoped to
+.wrap-modal1 only, so the full-size gallery on product-detail.html's
+own page (which reuses the same .wrap-slick3 markup) is unaffected. */
+.wrap-modal1 .wrap-slick3 {
+	max-width: 340px;
+	margin: 0 auto;
+}
+
+.wrap-modal1 .slick3 {
+	width: 100%;
+	/* The dots block sits before the image track in the HTML source, so
+	   with both now full-width flex children they'd wrap dots-then-image.
+	   Force the visual order to image-then-thumbnails instead. */
+	order: 1;
+}
+
+.wrap-modal1 .item-slick3 .wrap-pic-w {
+	aspect-ratio: 4 / 5;
+	overflow: hidden;
+}
+
+.wrap-modal1 .item-slick3 img {
+	width: 100%;
+	height: 100%;
+	-o-object-fit: cover;
+	object-fit: cover;
+	-o-object-position: center top;
+	object-position: center top;
+}
+
+.wrap-modal1 .wrap-slick3-arrows {
+	width: 100%;
+}
+
+.wrap-modal1 .wrap-slick3-dots {
+	width: 100%;
+	margin-top: 14px;
+	order: 2;
+}
+
+.wrap-modal1 .slick3-dots {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 10px;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.wrap-modal1 .slick3-dots li {
+	width: 46px;
+	margin-bottom: 0;
+	opacity: 0.55;
+	-webkit-filter: blur(1.5px);
+	filter: blur(1.5px);
+	-webkit-transform: scale(0.88);
+	-moz-transform: scale(0.88);
+	-ms-transform: scale(0.88);
+	-o-transform: scale(0.88);
+	transform: scale(0.88);
+	-webkit-transition: all 0.35s;
+	-o-transition: all 0.35s;
+	-moz-transition: all 0.35s;
+	transition: all 0.35s;
+}
+
+.wrap-modal1 .slick3-dots li img {
+	aspect-ratio: 4 / 5;
+	-o-object-fit: cover;
+	object-fit: cover;
+	-o-object-position: center top;
+	object-position: center top;
+	border-radius: 4px;
+}
+
+.wrap-modal1 .slick3-dots li:hover {
+	opacity: 0.8;
+	-webkit-filter: blur(0);
+	filter: blur(0);
+}
+
+.wrap-modal1 .slick3-dots .slick-active {
+	width: 58px;
+	opacity: 1;
+	-webkit-filter: blur(0);
+	filter: blur(0);
+	-webkit-transform: scale(1);
+	-moz-transform: scale(1);
+	-ms-transform: scale(1);
+	-o-transform: scale(1);
+	transform: scale(1);
+}
+
+.wrap-modal1 .slick3-dot-overlay {
+	border-radius: 4px;
+}
+
+.wrap-modal1 .slick3-dots .slick-active .slick3-dot-overlay {
+	border-color: #717fe0;
+}
+
+/* --- Quick View modal: "From Our Gallery" mini preview ---
+Sits under the Add to Cart row in the Quick View modal (.wrap-modal1, see
+index.html / product.html / product-detail.html + js/modal-gallery-preview.js).
+Same coverflow idea as the full gallery.html slider (center photo sharp and
+slightly bigger, side photos dimmed/blurred) but scaled down to fit the
+modal's narrower info column, plus a "View Full Gallery" link to gallery.html. */
+.modal-gallery-preview {
+	border-top: 1px solid #ebebeb;
+}
+
+.modal-gallery-preview-head {
+	margin-bottom: 2px;
+}
+
+.modal-gallery-preview-link i {
+	font-size: 11px;
+	margin-left: 4px;
+}
+
+.modal-gallery-preview-slider-wrap {
+	max-width: 320px;
+	margin: 0 auto;
+	overflow: hidden;
+	position: relative;
+}
+
+.modal-gallery-preview-slick .slick-slide {
+	padding: 0 4px;
+	transition: transform 0.35s ease, opacity 0.35s ease, filter 0.35s ease;
+	opacity: 0.4;
+	filter: blur(1.5px);
+	transform: scale(0.82);
+}
+
+.modal-gallery-preview-slick .slick-slide.slick-center {
+	opacity: 1;
+	filter: none;
+	transform: scale(1);
+	position: relative;
+	z-index: 2;
+}
+
+.modal-gallery-preview-pic {
+	display: block;
+	border-radius: 4px;
+	overflow: hidden;
+	aspect-ratio: 3 / 4;
+}
+
+.modal-gallery-preview-pic img {
+	width: 100%;
+	height: 100%;
+	-o-object-fit: cover;
+	object-fit: cover;
+}
+
+.modal-gallery-preview-arrow {
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	z-index: 10;
+	width: 32px;
+	height: 32px;
+	border: none;
+	border-radius: 50%;
+	background: rgba(0, 0, 0, 0.45);
+	color: #fff;
+	font-size: 13px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	cursor: pointer;
+	transition: background 0.3s;
+}
+
+.modal-gallery-preview-arrow:hover {
+	background: rgba(0, 0, 0, 0.8);
+}
+
+.modal-gallery-preview-prev { left: -4px; }
+.modal-gallery-preview-next { right: -4px; }
+
+@media (max-width: 767px) {
+	.modal-gallery-preview-slider-wrap {
+		max-width: 260px;
+	}
 }
