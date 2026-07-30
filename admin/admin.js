@@ -71,6 +71,7 @@
   const siteGalleryModal = document.getElementById('site-gallery-modal');
   const siteGalleryFieldsContainer = document.getElementById('site-gallery-fields');
   const siteGalleryAddInput = document.getElementById('site-gallery-add-input');
+  const siteGalleryAddLabelText = document.getElementById('site-gallery-add-label-text');
   const siteGalleryCloseX = document.getElementById('site-gallery-close-x');
   const siteGalleryCancelBtn = document.getElementById('site-gallery-cancel-btn');
   const siteGallerySaveBtn = document.getElementById('site-gallery-save-btn');
@@ -1428,24 +1429,41 @@ function moveProduct(product, categoryKey, direction) {
   });
 
   siteGalleryAddInput.addEventListener('change', async () => {
-    const file = siteGalleryAddInput.files[0];
-    if (!file) return;
-    const dataUrl = await openCropper(file);
-    siteGalleryAddInput.value = ''; // allow re-selecting the same file later
-    if (!dataUrl) return;
-    try {
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filename: file.name, dataUrl }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Upload failed');
-      galleryPhotos.push({ id: nextGalleryId++, image: data.url, caption: '' });
-      renderSiteGalleryFields();
-    } catch (err) {
-      showBanner('Gallery photo upload failed: ' + err.message, 'error');
+    // Supports selecting multiple photos at once (see `multiple` on the
+    // input in admin/index.html). The crop tool only handles one image at
+    // a time, so we walk through the batch sequentially — crop, upload,
+    // append — rather than trying to crop them all in parallel.
+    const files = Array.from(siteGalleryAddInput.files || []);
+    siteGalleryAddInput.value = ''; // allow re-selecting the same file(s) later
+    if (!files.length) return;
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (files.length > 1) {
+        siteGalleryAddLabelText.textContent = `Cropping ${i + 1} of ${files.length}…`;
+      }
+      const dataUrl = await openCropper(file);
+      if (!dataUrl) continue; // manager cancelled the crop for this one — skip it, keep going
+
+      try {
+        if (files.length > 1) {
+          siteGalleryAddLabelText.textContent = `Uploading ${i + 1} of ${files.length}…`;
+        }
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename: file.name, dataUrl }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Upload failed');
+        galleryPhotos.push({ id: nextGalleryId++, image: data.url, caption: '' });
+        renderSiteGalleryFields();
+      } catch (err) {
+        showBanner(`"${file.name}" failed to upload: ${err.message}`, 'error');
+      }
     }
+
+    siteGalleryAddLabelText.textContent = '+ Add Photo';
   });
 
   siteGallerySaveBtn.addEventListener('click', async () => {
