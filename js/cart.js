@@ -33,6 +33,12 @@
   // couponsCache below) and refreshed once on init — see loadDeliveryCharge.
   let deliveryChargeCache = 0;
 
+  // Order-value threshold (Rs., checked against subtotal minus any coupon
+  // discount) above which deliveryCharge is waived — matches the "Free
+  // Shipping on orders over Rs. X" banner on the homepage. `null` means the
+  // admin hasn't set one, so delivery is always charged.
+  let freeShippingThresholdCache = null;
+
   function readCoupon() {
     try {
       const raw = localStorage.getItem(COUPON_STORAGE_KEY);
@@ -116,9 +122,23 @@
       return Math.round(this.getSubtotal() * coupon.percent / 100);
     },
     // Only charged when the cart actually has items — an empty cart has
-    // nothing to deliver.
+    // nothing to deliver. Waived automatically once the post-discount
+    // subtotal reaches the admin's free shipping threshold (if one is set).
     getDeliveryCharge() {
-      return readCart().length ? deliveryChargeCache : 0;
+      if (!readCart().length) return 0;
+      if (freeShippingThresholdCache != null) {
+        const netSubtotal = Math.max(0, this.getSubtotal() - this.getDiscount());
+        if (netSubtotal >= freeShippingThresholdCache) return 0;
+      }
+      return deliveryChargeCache;
+    },
+    // How much more (Rs.) the customer needs to add to their cart to
+    // unlock free shipping, or 0 if there's no threshold set / it's
+    // already met. Used to show a "Add Rs. X more for free shipping" nudge.
+    getAmountToFreeShipping() {
+      if (freeShippingThresholdCache == null || !readCart().length) return 0;
+      const netSubtotal = Math.max(0, this.getSubtotal() - this.getDiscount());
+      return Math.max(0, freeShippingThresholdCache - netSubtotal);
     },
     getTotal() {
       return Math.max(0, this.getSubtotal() - this.getDiscount()) + this.getDeliveryCharge();
@@ -312,6 +332,23 @@
         if (amountEl) amountEl.textContent = money(delivery);
       } else {
         row.style.display = 'none';
+      }
+    });
+    document.querySelectorAll('.js-free-shipping-nudge').forEach((el) => {
+      if (!items.length) {
+        el.style.display = 'none';
+        return;
+      }
+      const remaining = Cart.getAmountToFreeShipping();
+      if (remaining > 0) {
+        el.style.display = '';
+        el.textContent = `Add ${money(remaining)} more to your cart to get free shipping.`;
+      } else if (Cart.getDeliveryCharge() === 0 && freeShippingThresholdCache != null) {
+        el.style.display = '';
+        el.textContent = 'You\u2019ve unlocked free shipping on this order!';
+        el.style.color = '#2e7d32';
+      } else {
+        el.style.display = 'none';
       }
     });
 
@@ -727,17 +764,24 @@
     }
   }
 
-  // Fetches the current admin-set delivery charge on page load and
-  // re-renders once it's in, so the header mini-cart, the full cart page,
-  // and the WhatsApp checkout message all reflect it without needing a
-  // manual reload. Defaults to 0 (free) if the request fails.
+  // Fetches the current admin-set delivery charge (and free shipping
+  // threshold) on page load and re-renders once it's in, so the header
+  // mini-cart, the full cart page, and the WhatsApp checkout message all
+  // reflect it without needing a manual reload. Defaults to a flat charge
+  // with no free shipping if the request fails.
   async function loadDeliveryCharge() {
     try {
       const data = await fetchJsonWithRetry('/api/settings');
       const val = Number(data.deliveryCharge);
       deliveryChargeCache = Number.isFinite(val) && val >= 0 ? val : 0;
+      const thresholdVal = Number(data.freeShippingThreshold);
+      freeShippingThresholdCache =
+        data.freeShippingThreshold != null && Number.isFinite(thresholdVal) && thresholdVal >= 0
+          ? thresholdVal
+          : null;
     } catch {
       deliveryChargeCache = 0;
+      freeShippingThresholdCache = null;
     }
     renderAll();
   }

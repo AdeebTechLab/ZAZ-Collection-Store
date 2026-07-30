@@ -4,10 +4,14 @@ const { getSessionFromRequest, readJsonBody } = require('../lib/auth');
 
 const SETTINGS_PATHNAME = 'settings-data.json';
 
-// Store-wide settings the admin can change without touching code. Currently
-// just the flat delivery charge (in the same currency/units as product
-// prices) that's added on top of the cart subtotal at checkout — more
-// settings can be added to this same object later without a new endpoint.
+// Store-wide settings the admin can change without touching code:
+// - deliveryCharge: flat delivery fee (same currency/units as product
+//   prices) added on top of the cart subtotal at checkout.
+// - freeShippingThreshold: minimum (post-discount) cart subtotal at which
+//   deliveryCharge is waived automatically — set to `null` to disable free
+//   shipping entirely (always charge deliveryCharge). Matches the "Free
+//   Shipping on all orders over Rs. X" banner on the homepage.
+// More settings can be added to this same object later without a new endpoint.
 
 function loadBundledDefault() {
   const filePath = path.join(__dirname, '..', 'data', 'settings-data.json');
@@ -26,6 +30,16 @@ function validateSettings(data) {
     data.deliveryCharge < 0
   ) {
     return 'Delivery charge must be a non-negative number';
+  }
+  if (data.freeShippingThreshold != null) {
+    if (
+      typeof data.freeShippingThreshold !== 'number' ||
+      Number.isNaN(data.freeShippingThreshold) ||
+      !Number.isFinite(data.freeShippingThreshold) ||
+      data.freeShippingThreshold < 0
+    ) {
+      return 'Free shipping threshold must be a non-negative number (or left empty to disable it)';
+    }
   }
   return null;
 }
@@ -79,7 +93,10 @@ module.exports = async (req, res) => {
 
     // Only persist known fields, so an unexpected extra key in the request
     // body can't sneak into stored settings.
-    const clean = { deliveryCharge: body.deliveryCharge };
+    const clean = {
+      deliveryCharge: body.deliveryCharge,
+      freeShippingThreshold: body.freeShippingThreshold != null ? body.freeShippingThreshold : null,
+    };
 
     try {
       const { put } = require('@vercel/blob');

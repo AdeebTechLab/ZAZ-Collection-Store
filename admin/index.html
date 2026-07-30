@@ -28,7 +28,7 @@
         <button id="edit-categories-btn" class="btn btn-secondary">+ Manage Categories</button>
         <button id="edit-coupons-btn" class="btn btn-secondary">+ Manage Coupons</button>
         <button id="edit-gallery-btn" class="btn btn-secondary">+ Manage Gallery</button>
-        <button id="edit-delivery-btn" class="btn btn-secondary">+ Delivery Charge</button>
+        <button id="edit-delivery-btn" class="btn btn-secondary">+ Delivery &amp; Free Shipping</button>
         <span id="save-status" class="save-status"></span>
         <button id="save-btn" class="btn btn-primary">Save Changes</button>
         <button id="logout-btn" class="btn btn-ghost">Log Out</button>
@@ -247,13 +247,14 @@
     </div>
   </div>
 
-  <!-- Delivery charge editor modal: a single store-wide flat delivery fee,
-       added on top of the cart subtotal at checkout. Stored via
+  <!-- Delivery & free shipping settings modal: a store-wide flat delivery
+       fee, added on top of the cart subtotal at checkout, plus an optional
+       order-value threshold above which delivery becomes free. Stored via
        /api/settings (see loadSettings/openDeliveryModal in admin.js). -->
   <div id="delivery-modal" class="crop-modal hidden">
     <div class="crop-modal-content">
       <div class="crop-modal-header">
-        <h2>Delivery Charge</h2>
+        <h2>Delivery &amp; Free Shipping</h2>
         <button type="button" id="delivery-close-x" class="crop-close-btn" aria-label="Cancel">&times;</button>
       </div>
 
@@ -262,6 +263,13 @@
       <label class="crop-field">
         Delivery charge (Rs.)
         <input type="number" id="delivery-charge-input" min="0" step="1" inputmode="numeric" placeholder="e.g. 200">
+      </label>
+
+      <p class="crop-hint">Optionally waive delivery automatically once a customer's cart total (after any coupon discount) reaches this amount — matches the "Free Shipping" banner on the homepage. Leave empty to never waive it.</p>
+
+      <label class="crop-field">
+        Free shipping over (Rs.)
+        <input type="number" id="free-shipping-threshold-input" min="0" step="1" inputmode="numeric" placeholder="e.g. 5000 — leave empty to disable">
       </label>
 
       <div class="crop-modal-actions">

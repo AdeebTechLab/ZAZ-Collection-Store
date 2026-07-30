@@ -25,6 +25,11 @@
   // (free) until an admin sets one via the Delivery Charge modal.
   let deliveryCharge = 0;
 
+  // Order-value threshold (Rs., post-discount) above which deliveryCharge
+  // is waived automatically. `null` means the feature is off (delivery is
+  // always charged). Loaded from /api/settings.
+  let freeShippingThreshold = null;
+
   // Standalone site gallery photos (gallery.html), loaded from /api/gallery.
   // Separate from each product's own extra photos (product.images) — this
   // is a flat, admin-ordered list of { id, image, caption } shown on its
@@ -58,6 +63,7 @@
   const editDeliveryBtn = document.getElementById('edit-delivery-btn');
   const deliveryModal = document.getElementById('delivery-modal');
   const deliveryChargeInput = document.getElementById('delivery-charge-input');
+  const freeShippingThresholdInput = document.getElementById('free-shipping-threshold-input');
   const deliveryCloseX = document.getElementById('delivery-close-x');
   const deliveryCancelBtn = document.getElementById('delivery-cancel-btn');
   const deliverySaveBtn = document.getElementById('delivery-save-btn');
@@ -245,6 +251,11 @@
       const data = await res.json();
       const val = Number(data.deliveryCharge);
       deliveryCharge = Number.isFinite(val) && val >= 0 ? val : 0;
+      const thresholdVal = Number(data.freeShippingThreshold);
+      freeShippingThreshold =
+        data.freeShippingThreshold != null && Number.isFinite(thresholdVal) && thresholdVal >= 0
+          ? thresholdVal
+          : null;
     } catch (err) {
       showBanner('Could not load delivery charge: ' + err.message, 'error');
     }
@@ -1265,6 +1276,7 @@
 
   function openDeliveryModal() {
     deliveryChargeInput.value = deliveryCharge || 0;
+    freeShippingThresholdInput.value = freeShippingThreshold != null ? freeShippingThreshold : '';
     deliveryModal.classList.remove('hidden');
     deliveryChargeInput.focus();
   }
@@ -1288,22 +1300,33 @@
       return;
     }
 
+    const thresholdRaw = freeShippingThresholdInput.value.trim();
+    let thresholdValue = null;
+    if (thresholdRaw) {
+      thresholdValue = Number(thresholdRaw);
+      if (Number.isNaN(thresholdValue) || !Number.isFinite(thresholdValue) || thresholdValue < 0) {
+        showBanner('Free shipping threshold must be a non-negative number (or left empty to disable it).', 'error');
+        return;
+      }
+    }
+
     deliverySaveBtn.disabled = true;
     deliverySaveBtn.textContent = 'Saving…';
     try {
       const res = await fetch('/api/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ deliveryCharge: value }),
+        body: JSON.stringify({ deliveryCharge: value, freeShippingThreshold: thresholdValue }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to save delivery charge');
 
       deliveryCharge = value;
+      freeShippingThreshold = thresholdValue;
       closeDeliveryModal();
-      showBanner('Delivery charge updated — changes are live on the site now.', 'success');
+      showBanner('Delivery settings updated — changes are live on the site now.', 'success');
     } catch (err) {
-      showBanner('Could not save delivery charge: ' + err.message, 'error');
+      showBanner('Could not save delivery settings: ' + err.message, 'error');
     } finally {
       deliverySaveBtn.disabled = false;
       deliverySaveBtn.textContent = 'Save Delivery Charge';
