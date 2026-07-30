@@ -157,19 +157,24 @@
       // Non-fatal — keep the built-in default labels (Summer/Winter/Ethnic/Casual/Party Wear)
       // so the admin panel still works even if this fetch fails.
     }
-    applyCategoryLabels();
+    function applyCategoryLabels() {
+    container.querySelectorAll('.category-section').forEach((section) => {
+      const key = section.dataset.categoryKey;
+      const title = section.querySelector('.category-section-title');
+      if (key && title) title.textContent = categoryLabels[key];
+    });
+  }
   }
 
-  // Builds the <option> list for a category <select>, in the current
-  // display order — used for the product-card template and for every
-  // already-rendered card, so a freshly added/renamed/deleted category
-  // shows up everywhere immediately.
-  function categoryOptionsHtml() {
-    return categoryOrder
-      .map((key) => `<option value="${escapeHtml(key)}">${escapeHtml(categoryLabels[key])}</option>`)
-      .join('');
+// Builds the checkbox list for categories in the current display order
+  function categoryCheckboxesHtml(selectedKeys = []) {
+    return categoryOrder.map((key) => `
+      <label class="category-checkbox-label">
+        <input type="checkbox" class="p-category-checkbox" value="${escapeHtml(key)}"
+          ${selectedKeys.includes(key) ? 'checked' : ''}>
+        ${escapeHtml(categoryLabels[key])}
+      </label>`).join('');
   }
-
   // Pushes the current categoryLabels/categoryOrder into every place a
   // category is shown in the admin UI: the card template (so newly added
   // products get the right dropdown), every already-rendered product card's
@@ -200,6 +205,11 @@
       if (!res.ok) throw new Error('Failed to load products (status ' + res.status + ')');
       productsData = await res.json();
       productsData.forEach((p) => {
+        if (!Array.isArray(p.categories)) {
+          p.categories = p.category ? [p.category] : [categoryOrder[0]];
+        }
+        delete p.category;
+
         // Older saved products used a numeric `stock` quantity — migrate
         // that to the new simple inStock boolean the first time they're
         // loaded here, so they don't fail validation until someone happens
@@ -319,7 +329,7 @@
 
     title.textContent = categoryLabels[categoryKey];
 
-    const items = productsData.filter((p) => p.category === categoryKey);
+  const items = productsData.filter((p) => Array.isArray(p.categories) && p.categories.includes(categoryKey));
     const visibleItems = items.filter(matchesSearch);
     count.textContent = searchTerm
       ? (visibleItems.length === 1 ? '1 match' : `${visibleItems.length} matches`)
@@ -333,19 +343,14 @@
     } else {
       items.forEach((product, idx) => {
         if (!matchesSearch(product)) return;
-        grid.appendChild(renderProduct(product, idx === 0, idx === items.length - 1));
+        grid.appendChild(renderProduct(product, categoryKey, idx === 0, idx === items.length - 1));
       });
     }
     return { node, visibleCount: visibleItems.length };
   }
 
-  // Swaps `product` with its neighbor (within the same category, direction
-  // -1 = up, +1 = down) by swapping their positions in the underlying
-  // productsData array. Category grouping only filters/displays that array,
-  // so swapping the two real array slots is enough to change both the
-  // on-screen order and the order that gets saved/published.
-  function moveProduct(product, direction) {
-    const sameCategory = productsData.filter((p) => p.category === product.category);
+function moveProduct(product, categoryKey, direction) {
+    const sameCategory = productsData.filter((p) => Array.isArray(p.categories) && p.categories.includes(categoryKey));
     const posInCategory = sameCategory.indexOf(product);
     const swapWith = sameCategory[posInCategory + direction];
     if (!swapWith) return;
@@ -414,12 +419,12 @@
     renderChips();
   }
 
-  function renderProduct(product, isFirst, isLast) {
+  function renderProduct(product, categoryKey, isFirst, isLast) {
     const node = productTemplate.content.firstElementChild.cloneNode(true);
     const img = node.querySelector('.product-photo-img');
     const photoInput = node.querySelector('.photo-input');
     const nameInput = node.querySelector('.p-name-input');
-    const categoryInput = node.querySelector('.p-category-input');
+    const categoryBox = node.querySelector('.p-category-checkboxes');
     const priceInput = node.querySelector('.p-price-input');
     const inStockInput = node.querySelector('.p-instock-input');
     const discountInput = node.querySelector('.p-discount-input');
@@ -436,13 +441,12 @@
 
     moveUpBtn.disabled = !!isFirst;
     moveDownBtn.disabled = !!isLast;
-    moveUpBtn.addEventListener('click', () => moveProduct(product, -1));
-    moveDownBtn.addEventListener('click', () => moveProduct(product, 1));
-
+    moveUpBtn.addEventListener('click', () => moveProduct(product, categoryKey, -1));
+    moveDownBtn.addEventListener('click', () => moveProduct(product, categoryKey, 1));
     img.src = imageSrc(product.image);
     img.alt = product.name || '';
     nameInput.value = product.name || '';
-    categoryInput.value = product.category || categoryOrder[0];
+    categoryBox.innerHTML = categoryCheckboxesHtml(product.categories);
     priceInput.value = product.price != null ? product.price : '';
     inStockInput.checked = product.inStock !== false;
     discountInput.checked = product.oldPrice != null;
@@ -467,9 +471,11 @@
     updateAutoBadgePlaceholder();
 
     nameInput.addEventListener('input', () => { product.name = nameInput.value; });
-    categoryInput.addEventListener('change', () => {
-      product.category = categoryInput.value;
-      renderAll();
+    categoryBox.querySelectorAll('.p-category-checkbox').forEach((cb) => {
+      cb.addEventListener('change', () => {
+        product.categories = Array.from(categoryBox.querySelectorAll('.p-category-checkbox:checked')).map((c) => c.value);
+        renderAll();
+      });
     });
     priceInput.addEventListener('input', () => {
       const v = parseFloat(priceInput.value);
@@ -1074,8 +1080,9 @@
       let reassignedCount = 0;
       if (removedKeys.length) {
         productsData.forEach((product) => {
-          if (removedKeys.includes(product.category)) {
-            product.category = fallbackKey;
+          if (Array.isArray(product.categories) && product.categories.some((c) => removedKeys.includes(c))) {
+            product.categories = product.categories.filter((c) => !removedKeys.includes(c));
+            if (product.categories.length === 0) product.categories = [fallbackKey];
             reassignedCount++;
           }
         });
@@ -1485,7 +1492,7 @@
     const newProduct = {
       id: nextId++,
       name: '',
-      category: defaultCategory,
+      categories: [defaultCategory],
       price: 0,
       oldPrice: null,
       saleTag: null,

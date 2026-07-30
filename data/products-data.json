@@ -2,7 +2,9 @@
   {
     "id": 1,
     "name": "Embroidered Lawn Kurti",
-    "category": "summer-wear",
+    "categories": [
+      "summer-wear"
+    ],
     "price": 4500,
     "oldPrice": null,
     "image": "embroidered-lawn-kurti.webp",
@@ -13,7 +15,9 @@
   {
     "id": 2,
     "name": "Chiffon Party Wear Kurti",
-    "category": "summer-wear",
+    "categories": [
+      "summer-wear"
+    ],
     "price": 9800,
     "oldPrice": null,
     "image": "chiffon-party-wear-kurti.webp",
@@ -24,7 +28,9 @@
   {
     "id": 3,
     "name": "Cotton Chino Trouser",
-    "category": "winter-wear",
+    "categories": [
+      "winter-wear"
+    ],
     "price": 7000,
     "oldPrice": null,
     "image": "cotton-chino-trouser.webp",
@@ -35,7 +41,9 @@
   {
     "id": 4,
     "name": "Wool Blend Trench Coat",
-    "category": "summer-wear",
+    "categories": [
+      "summer-wear"
+    ],
     "price": 20900,
     "oldPrice": null,
     "image": "wool-blend-trench-coat.webp",
@@ -46,7 +54,9 @@
   {
     "id": 5,
     "name": "Front Pocket Cardigan",
-    "category": "summer-wear",
+    "categories": [
+      "summer-wear"
+    ],
     "price": 9700,
     "oldPrice": null,
     "image": "front-pocket-cardigan.webp",
@@ -57,7 +67,9 @@
   {
     "id": 6,
     "name": "Embroidered Party Wear Suit",
-    "category": "party-wear",
+    "categories": [
+      "party-wear"
+    ],
     "price": 25900,
     "oldPrice": null,
     "image": "embroidered-party-wear-suit.webp",
@@ -68,7 +80,9 @@
   {
     "id": 7,
     "name": "Stretch Cotton Kurti",
-    "category": "summer-wear",
+    "categories": [
+      "summer-wear"
+    ],
     "price": 14600,
     "oldPrice": null,
     "image": "stretch-cotton-kurti.webp",
@@ -79,7 +93,9 @@
   {
     "id": 8,
     "name": "Metallic Print Chiffon Top",
-    "category": "summer-wear",
+    "categories": [
+      "summer-wear"
+    ],
     "price": 5300,
     "oldPrice": null,
     "image": "metallic-print-chiffon-top.webp",
@@ -90,7 +106,9 @@
   {
     "id": 9,
     "name": "Casual Printed Cotton Co-ord Set",
-    "category": "casual-wear",
+    "categories": [
+      "casual-wear"
+    ],
     "price": 20900,
     "oldPrice": null,
     "image": "casual-printed-cotton-coord-set.webp",
@@ -101,7 +119,9 @@
   {
     "id": 10,
     "name": "Striped Cotton T-Shirt",
-    "category": "summer-wear",
+    "categories": [
+      "summer-wear"
+    ],
     "price": 7200,
     "oldPrice": null,
     "image": "striped-cotton-tshirt.webp",
@@ -112,7 +132,9 @@
   {
     "id": 11,
     "name": "Cable Knit Wool Sweater",
-    "category": "winter-wear",
+    "categories": [
+      "winter-wear"
+    ],
     "price": 17600,
     "oldPrice": null,
     "image": "cable-knit-wool-sweater.webp",
@@ -123,7 +145,9 @@
   {
     "id": 12,
     "name": "Quilted Winter Puffer Jacket",
-    "category": "winter-wear",
+    "categories": [
+      "winter-wear"
+    ],
     "price": 17600,
     "oldPrice": null,
     "image": "quilted-winter-puffer-jacket.webp",
@@ -134,7 +158,9 @@
   {
     "id": 13,
     "name": "Full Sleeve Cotton T-Shirt",
-    "category": "summer-wear",
+    "categories": [
+      "summer-wear"
+    ],
     "price": 5100,
     "oldPrice": null,
     "image": "full-sleeve-cotton-tshirt.webp",
@@ -145,7 +171,9 @@
   {
     "id": 14,
     "name": "Embellished Party Dress",
-    "category": "summer-wear",
+    "categories": [
+      "summer-wear"
+    ],
     "price": 15200,
     "oldPrice": null,
     "image": "embellished-party-dress.webp",
@@ -156,7 +184,9 @@
   {
     "id": 15,
     "name": "Sequin Embellished Party Gown",
-    "category": "party-wear",
+    "categories": [
+      "party-wear"
+    ],
     "price": 24100,
     "oldPrice": null,
     "image": "sequin-embellished-party-gown.webp",
@@ -167,7 +197,9 @@
   {
     "id": 16,
     "name": "Square Neck Blouse",
-    "category": "summer-wear",
+    "categories": [
+      "summer-wear"
+    ],
     "price": 8200,
     "oldPrice": null,
     "image": "square-neck-blouse.webp",
@@ -178,7 +210,9 @@
   {
     "id": 17,
     "name": "Long Sleeve Cotton T-Shirt",
-    "category": "summer-wear",
+    "categories": [
+      "summer-wear"
+    ],
     "price": 11100,
     "oldPrice": 13900,
     "image": "long-sleeve-tshirt.webp",
@@ -190,7 +224,9 @@
   {
     "id": 18,
     "name": "Grey Check Wool Coat",
-    "category": "winter-wear",
+    "categories": [
+      "winter-wear"
+    ],
     "price": 12500,
     "oldPrice": 15300,
     "image": "grey-check-coat.webp",
@@ -202,7 +238,9 @@
   {
     "id": 19,
     "name": "Silk White Shirt",
-    "category": "summer-wear",
+    "categories": [
+      "summer-wear"
+    ],
     "price": 9700,
     "oldPrice": 12500,
     "image": "silk-white-shirt.webp",
@@ -214,7 +252,9 @@
   {
     "id": 20,
     "name": "Blue Denim Jeans",
-    "category": "winter-wear",
+    "categories": [
+      "winter-wear"
+    ],
     "price": 9700,
     "oldPrice": 12500,
     "image": "blue-jeans-pant.webp",

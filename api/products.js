@@ -31,8 +31,9 @@ function validateProducts(data) {
     if (typeof product.name !== 'string' || !product.name.trim()) {
       return `Product ${product.id} needs a non-empty name`;
     }
-    if (typeof product.category !== 'string' || !CATEGORY_KEY_PATTERN.test(product.category)) {
-      return `Product "${product.name}" needs a valid category`;
+    if (!Array.isArray(product.categories) || product.categories.length === 0 ||
+        product.categories.some((c) => typeof c !== 'string' || !CATEGORY_KEY_PATTERN.test(c))) {
+      return `Product "${product.name}" needs at least one valid category`;
     }
     if (typeof product.price !== 'number' || Number.isNaN(product.price) || product.price < 0) {
       return `Product "${product.name}" needs a valid non-negative price`;

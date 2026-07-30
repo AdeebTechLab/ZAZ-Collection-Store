@@ -36,8 +36,8 @@
 
   function buildCard(product) {
     const col = document.createElement('div');
-    col.className = 'col-sm-6 col-md-4 col-lg-3 p-b-35 isotope-item ' + (product.category || '');
-
+    const catClasses = Array.isArray(product.categories) ? product.categories.join(' ') : '';
+    col.className = 'col-sm-6 col-md-4 col-lg-3 p-b-35 isotope-item ' + catClasses;
     const outOfStock = product.inStock === false;
     const priceHtml = product.oldPrice != null
       ? `<span class="stext-105 cl3">${money(product.price)}</span> ` +
