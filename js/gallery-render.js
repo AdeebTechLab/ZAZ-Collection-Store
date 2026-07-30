@@ -14,6 +14,24 @@
   const grid = document.getElementById('gallery-grid');
   if (!grid) return; // not on gallery.html
 
+  // A single flaky/slow request (common on mobile data) used to permanently
+  // show an error message, even though a retry a moment later would have
+  // succeeded. Retry with a short backoff first.
+  async function fetchJsonWithRetry(url, attempts = 3, delayMs = 700) {
+    let lastErr;
+    for (let i = 0; i < attempts; i++) {
+      try {
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) throw new Error('bad response: ' + res.status);
+        return await res.json();
+      } catch (err) {
+        lastErr = err;
+        if (i < attempts - 1) await new Promise((r) => setTimeout(r, delayMs * (i + 1)));
+      }
+    }
+    throw lastErr;
+  }
+
   function imageSrc(image) {
     if (!image) return '';
     if (/^https?:\/\//i.test(image) || image.startsWith('data:')) return image;
@@ -73,9 +91,7 @@
   async function render() {
     let photos;
     try {
-      const res = await fetch('/api/gallery', { cache: 'no-store' });
-      if (!res.ok) throw new Error('bad response');
-      photos = await res.json();
+      photos = await fetchJsonWithRetry('/api/gallery');
       if (!Array.isArray(photos)) throw new Error('bad payload');
     } catch {
       showMessage('Sorry, the gallery couldn\u2019t be loaded right now. Please try again shortly.');

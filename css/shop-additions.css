@@ -1506,3 +1506,18 @@ modal's narrower info column, plus a "View Full Gallery" link to gallery.html. *
 		max-width: 260px;
 	}
 }
+
+/* At <=480px js/modal-gallery-preview.js switches to slidesToShow: 1 /
+centerMode: false (only one photo fits, so there's nothing to coverflow
+between). With centerMode off, Slick never adds the .slick-center class,
+so the single visible slide would otherwise keep the dimmed/blurred
+"side slide" look forever. Reset it back to normal here, same as the
+full gallery.html slider already does at its own breakpoint. */
+@media (max-width: 480px) {
+	.modal-gallery-preview-slick .slick-slide {
+		padding: 0;
+		opacity: 1;
+		filter: none;
+		transform: none;
+	}
+}

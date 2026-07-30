@@ -5,6 +5,25 @@
 (function () {
   'use strict';
 
+  // A single flaky/slow request (common on mobile data) used to permanently
+  // fall back to the stale product list baked into the HTML at build time —
+  // even though a retry a moment later would have succeeded. Retry a couple
+  // of times with a short backoff before giving up for real.
+  async function fetchJsonWithRetry(url, attempts = 3, delayMs = 700) {
+    let lastErr;
+    for (let i = 0; i < attempts; i++) {
+      try {
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) throw new Error('bad response: ' + res.status);
+        return await res.json();
+      } catch (err) {
+        lastErr = err;
+        if (i < attempts - 1) await new Promise((r) => setTimeout(r, delayMs * (i + 1)));
+      }
+    }
+    throw lastErr;
+  }
+
   function imageSrc(image) {
     if (!image) return 'images/embroidered-lawn-kurti.webp';
     if (/^https?:\/\//i.test(image) || image.startsWith('data:')) return image;
@@ -404,11 +423,11 @@
 
     let products;
     try {
-      const res = await fetch('/api/products', { cache: 'no-store' });
-      if (!res.ok) throw new Error('bad response');
-      products = await res.json();
+      products = await fetchJsonWithRetry('/api/products');
     } catch {
-      // Leave whatever static fallback markup is already in the page.
+      // Leave whatever static fallback markup is already in the page —
+      // only after retrying, so a single dropped request on a weak mobile
+      // connection doesn't hide newly-added products.
       return;
     }
 

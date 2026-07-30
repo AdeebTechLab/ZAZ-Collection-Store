@@ -5,6 +5,24 @@
 (function () {
   'use strict';
 
+  // A single flaky/slow request (common on mobile data) used to permanently
+  // leave the page on its default demo content, even though a retry a
+  // moment later would have succeeded. Retry with a short backoff first.
+  async function fetchJsonWithRetry(url, attempts = 3, delayMs = 700) {
+    let lastErr;
+    for (let i = 0; i < attempts; i++) {
+      try {
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) throw new Error('bad response: ' + res.status);
+        return await res.json();
+      } catch (err) {
+        lastErr = err;
+        if (i < attempts - 1) await new Promise((r) => setTimeout(r, delayMs * (i + 1)));
+      }
+    }
+    throw lastErr;
+  }
+
   function money(n) {
     return 'Rs. ' + Math.round(Number(n)).toLocaleString('en-US');
   }
@@ -114,11 +132,9 @@
 
     let products;
     try {
-      const res = await fetch('/api/products', { cache: 'no-store' });
-      if (!res.ok) throw new Error('bad response');
-      products = await res.json();
+      products = await fetchJsonWithRetry('/api/products');
     } catch {
-      return; // API unavailable — leave default content rather than break the page
+      return; // API unavailable even after retries — leave default content rather than break the page
     }
 
     const product = products.find((p) => p.id === id);

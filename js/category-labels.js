@@ -6,11 +6,27 @@
 // winter-wear/ethnic-wear/casual-wear/party-wear list baked into each
 // page's HTML.
 (function () {
+  // A single flaky/slow request (common on mobile data) used to permanently
+  // fall back to the default hardcoded category tabs, even though a retry a
+  // moment later would have succeeded. Retry with a short backoff first.
+  async function fetchJsonWithRetry(url, attempts = 3, delayMs = 700) {
+    let lastErr;
+    for (let i = 0; i < attempts; i++) {
+      try {
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) throw new Error('bad response: ' + res.status);
+        return await res.json();
+      } catch (err) {
+        lastErr = err;
+        if (i < attempts - 1) await new Promise((r) => setTimeout(r, delayMs * (i + 1)));
+      }
+    }
+    throw lastErr;
+  }
+
   async function fetchCategories() {
     try {
-      const res = await fetch('/api/categories', { cache: 'no-store' });
-      if (!res.ok) throw new Error('bad response');
-      const data = await res.json();
+      const data = await fetchJsonWithRetry('/api/categories');
       if (data && typeof data === 'object' && Object.keys(data).length) return data;
       return null;
     } catch {

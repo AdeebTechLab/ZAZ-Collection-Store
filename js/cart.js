@@ -9,6 +9,25 @@
   const STORAGE_KEY = 'zaz_cart_v1';
   const COUPON_STORAGE_KEY = 'zaz_coupon_v1';
 
+  // A single flaky/slow request (common on mobile data) used to permanently
+  // fall back to stale/empty cached data for the rest of the page's life
+  // (stock status, coupons, delivery charge). Retry with a short backoff
+  // before actually giving up.
+  async function fetchJsonWithRetry(url, attempts = 3, delayMs = 700) {
+    let lastErr;
+    for (let i = 0; i < attempts; i++) {
+      try {
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) throw new Error('bad response: ' + res.status);
+        return await res.json();
+      } catch (err) {
+        lastErr = err;
+        if (i < attempts - 1) await new Promise((r) => setTimeout(r, delayMs * (i + 1)));
+      }
+    }
+    throw lastErr;
+  }
+
   // Flat delivery charge (Rs.), set by the admin in the Delivery Charge
   // panel and served from /api/settings. Cached per page load (like
   // couponsCache below) and refreshed once on init — see loadDeliveryCharge.
@@ -387,9 +406,7 @@
   async function fetchProductsStockMap(forceFresh) {
     if (productsStockCache && !forceFresh) return productsStockCache;
     try {
-      const res = await fetch('/api/products', { cache: 'no-store' });
-      if (!res.ok) throw new Error('bad response');
-      const products = await res.json();
+      const products = await fetchJsonWithRetry('/api/products');
       const map = new Map();
       products.forEach((p) => map.set(p.id, p.inStock !== false));
       productsStockCache = map;
@@ -631,9 +648,7 @@
   async function fetchCoupons() {
     if (couponsCache) return couponsCache;
     try {
-      const res = await fetch('/api/coupons', { cache: 'no-store' });
-      if (!res.ok) throw new Error('bad response');
-      couponsCache = await res.json();
+      couponsCache = await fetchJsonWithRetry('/api/coupons');
     } catch {
       couponsCache = [];
     }
@@ -718,9 +733,7 @@
   // manual reload. Defaults to 0 (free) if the request fails.
   async function loadDeliveryCharge() {
     try {
-      const res = await fetch('/api/settings', { cache: 'no-store' });
-      if (!res.ok) throw new Error('bad response');
-      const data = await res.json();
+      const data = await fetchJsonWithRetry('/api/settings');
       const val = Number(data.deliveryCharge);
       deliveryChargeCache = Number.isFinite(val) && val >= 0 ? val : 0;
     } catch {
