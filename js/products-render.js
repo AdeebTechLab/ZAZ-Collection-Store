@@ -321,6 +321,13 @@
     const modal = getQuickViewModal();
     if (!modal) return;
     quickViewProduct = product;
+    const descEl = modal.querySelector('.js-desc-detail');
+if (descEl) {
+  descEl.textContent = product.description && product.description.trim()
+    ? product.description
+    : '';
+  descEl.style.display = descEl.textContent ? '' : 'none';
+}
 
     const nameEl = modal.querySelector('.js-name-detail');
     const priceEl = modal.querySelector('.js-price-detail');

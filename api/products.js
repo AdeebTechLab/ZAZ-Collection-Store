@@ -49,6 +49,9 @@ function validateProducts(data) {
     if (product.saleTag != null && typeof product.saleTag !== 'string') {
       return `Product "${product.name}" has an invalid badge text`;
     }
+    if (product.description != null && typeof product.description !== 'string') {
+  return `Product "${product.name}" has an invalid description`;
+}
     if (typeof product.inStock !== 'boolean') {
       return `Product "${product.name}" needs a valid stock status (in stock or out of stock)`;
     }

@@ -419,7 +419,8 @@ body {
 }
 .product-fields input[type="text"],
 .product-fields input[type="number"],
-.product-fields select {
+.product-fields select,
+.product-fields textarea.p-desc-input {
   width: 100%;
   padding: 9px 10px;
   border-radius: 6px;
@@ -429,7 +430,8 @@ body {
   background: #fafafa;
   color: var(--text);
 }
-.product-fields input:focus, .product-fields select:focus {
+.product-fields input:focus, .product-fields select:focus
+.product-fields textarea.p-desc-input:focus {
   outline: none;
   border-color: var(--brand);
   background: #fff;

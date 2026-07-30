@@ -148,6 +148,11 @@
     document.querySelectorAll('.js-price-detail').forEach((el) => {
       el.textContent = money(product.price);
     });
+    document.querySelectorAll('.js-desc-full, .js-desc-detail').forEach((el) => {
+  el.textContent = product.description && product.description.trim()
+    ? product.description
+    : 'No description available for this product yet.';
+});
 
     const images = galleryImages(product);
     document.querySelectorAll('.wrap-slick3').forEach((wrap) => {

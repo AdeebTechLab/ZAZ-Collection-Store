@@ -421,10 +421,12 @@ function moveProduct(product, categoryKey, direction) {
   }
 
   function renderProduct(product, categoryKey, isFirst, isLast) {
+    
     const node = productTemplate.content.firstElementChild.cloneNode(true);
     const img = node.querySelector('.product-photo-img');
     const photoInput = node.querySelector('.photo-input');
     const nameInput = node.querySelector('.p-name-input');
+    const descInput = node.querySelector('.p-desc-input');
     const categoryBox = node.querySelector('.p-category-checkboxes');
     const priceInput = node.querySelector('.p-price-input');
     const inStockInput = node.querySelector('.p-instock-input');
@@ -447,6 +449,7 @@ function moveProduct(product, categoryKey, direction) {
     img.src = imageSrc(product.image);
     img.alt = product.name || '';
     nameInput.value = product.name || '';
+    descInput.value = product.description || '';
     categoryBox.innerHTML = categoryCheckboxesHtml(product.categories);
     priceInput.value = product.price != null ? product.price : '';
     inStockInput.checked = product.inStock !== false;
@@ -472,6 +475,7 @@ function moveProduct(product, categoryKey, direction) {
     updateAutoBadgePlaceholder();
 
     nameInput.addEventListener('input', () => { product.name = nameInput.value; });
+    descInput.addEventListener('input', () => { product.description = descInput.value; });
     categoryBox.querySelectorAll('.p-category-checkbox').forEach((cb) => {
       cb.addEventListener('change', () => {
         product.categories = Array.from(categoryBox.querySelectorAll('.p-category-checkbox:checked')).map((c) => c.value);
