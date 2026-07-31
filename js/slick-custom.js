@@ -184,26 +184,48 @@
         /*==================================================================
         [ Slick3 ]*/
         $('.wrap-slick3').each(function(){
-            $(this).find('.slick3').slick({
+            var $wrap = $(this);
+            var $track = $wrap.find('.slick3');
+            var $dotsBox = $wrap.find('.wrap-slick3-dots');
+
+            var $thumbs = $('<div class="slick3-thumbs"></div>');
+            $track.find('.item-slick3').each(function(){
+                var portrait = $(this).data('thumb');
+                $thumbs.append('<div class="slick3-thumb-item"><img src="' + portrait + '" alt=""></div>');
+            });
+            $dotsBox.empty().append($thumbs);
+
+            $track.slick({
                 slidesToShow: 1,
                 slidesToScroll: 1,
-                fade: true,
+                fade: false,
                 infinite: true,
                 autoplay: false,
                 autoplaySpeed: 6000,
+                asNavFor: $thumbs,
 
                 arrows: true,
-                appendArrows: $(this).find('.wrap-slick3-arrows'),
+                appendArrows: $wrap.find('.wrap-slick3-arrows'),
                 prevArrow:'<button class="arrow-slick3 prev-slick3"><i class="fa fa-angle-left" aria-hidden="true"></i></button>',
                 nextArrow:'<button class="arrow-slick3 next-slick3"><i class="fa fa-angle-right" aria-hidden="true"></i></button>',
 
-                dots: true,
-                appendDots: $(this).find('.wrap-slick3-dots'),
-                dotsClass:'slick3-dots',
-                customPaging: function(slick, index) {
-                    var portrait = $(slick.$slides[index]).data('thumb');
-                    return '<img src=" ' + portrait + ' "/><div class="slick3-dot-overlay"></div>';
-                },  
+                dots: false,
+            });
+
+            $thumbs.slick({
+                slidesToShow: Math.min(3, $thumbs.children().length),
+                slidesToScroll: 1,
+                centerMode: true,
+                centerPadding: '0px',
+                fade: false,
+                infinite: true,
+                autoplay: false,
+                asNavFor: $track,
+                focusOnSelect: true,
+
+                arrows: true,
+                prevArrow: '<button type="button" class="slick3-thumb-arrow slick3-thumb-prev" aria-label="Previous photos"><i class="fa fa-angle-left" aria-hidden="true"></i></button>',
+                nextArrow: '<button type="button" class="slick3-thumb-arrow slick3-thumb-next" aria-label="More photos"><i class="fa fa-angle-right" aria-hidden="true"></i></button>',
             });
         });
             

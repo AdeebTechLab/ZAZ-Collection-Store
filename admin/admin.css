@@ -386,27 +386,6 @@ body {
   object-fit: cover;
   display: block;
 }
-.photo-upload-label {
-  position: absolute;
-  left: 50%;
-  bottom: 12px;
-  transform: translateX(-50%);
-  background: rgba(20, 20, 20, 0.78);
-  color: #fff;
-  font-family: Poppins-Medium, sans-serif;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  text-align: center;
-  padding: 8px 16px;
-  border-radius: 999px;
-  cursor: pointer;
-  transition: background 0.3s;
-  white-space: nowrap;
-}
-.photo-upload-label:hover { background: var(--brand); }
-.photo-upload-label input { display: none; }
-
 .product-fields { display: flex; flex-direction: column; gap: 4px; }
 .field-label {
   font-family: Poppins-SemiBold, sans-serif;
@@ -947,20 +926,25 @@ body {
   }
 }
 
-/* --- Manage Gallery modal (standalone site gallery, gallery.html) ---
-   Each card is a full standalone gallery photo with its own caption. */
-.site-gallery-grid {
+/* --- Per-product Photos grid (inline on each product card) ---
+   Every product now manages its own gallery of up to MAX_GALLERY_PHOTOS
+   photos. The starred/first photo is the "cover" — it's what shows on
+   listing cards, the product's default detail view, and the cart — the
+   rest are the product's own extra gallery photos, shown/slid through on
+   the storefront product detail page. */
+.product-gallery-label { margin-top: 2px; }
+.product-gallery-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: 14px;
-  margin-bottom: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(74px, 1fr));
+  gap: 8px;
+  margin-bottom: 4px;
 }
-.site-gallery-item {
+.product-gallery-item {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
-.site-gallery-photo {
+.product-gallery-photo {
   position: relative;
   width: 100%;
   aspect-ratio: 3 / 4;
@@ -970,38 +954,38 @@ body {
   border: 1px solid var(--border-dark);
   transition: border-color 0.2s;
 }
-.site-gallery-photo.is-featured { border: 2px solid var(--brand); }
-.site-gallery-img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.site-gallery-featured-badge {
+.product-gallery-photo.is-cover { border: 2px solid var(--brand); }
+.product-gallery-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.product-gallery-cover-badge {
   display: none;
   position: absolute;
-  top: 5px;
-  left: 5px;
+  top: 4px;
+  left: 4px;
   z-index: 2;
-  padding: 3px 8px;
+  padding: 2px 6px;
   border-radius: 20px;
   background: var(--brand);
   color: #fff;
   font-family: Poppins-Medium, sans-serif;
-  font-size: 10px;
+  font-size: 9px;
   letter-spacing: 0.03em;
   text-transform: uppercase;
 }
-.site-gallery-photo.is-featured .site-gallery-featured-badge { display: inline-block; }
-.site-gallery-feature { font-size: 13px !important; }
-.site-gallery-feature:hover:not(:disabled) { color: var(--brand); }
-.site-gallery-feature:disabled { color: var(--brand); opacity: 1 !important; cursor: default; }
-.site-gallery-remove {
+.product-gallery-photo.is-cover .product-gallery-cover-badge { display: inline-block; }
+.product-gallery-feature { font-size: 12px !important; }
+.product-gallery-feature:hover:not(:disabled) { color: var(--brand); }
+.product-gallery-feature:disabled { color: var(--brand); opacity: 1 !important; cursor: default; }
+.product-gallery-remove {
   position: absolute;
-  top: 5px;
-  right: 5px;
-  width: 22px;
-  height: 22px;
+  top: 4px;
+  right: 4px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   border: none;
   background: rgba(20, 20, 20, 0.78);
   color: #fff;
-  font-size: 14px;
+  font-size: 12px;
   line-height: 1;
   cursor: pointer;
   display: flex;
@@ -1010,8 +994,9 @@ body {
   padding: 0;
   transition: background 0.2s;
 }
-.site-gallery-remove:hover { background: var(--danger); }
-.site-gallery-controls {
+.product-gallery-remove:hover:not(:disabled) { background: var(--danger); }
+.product-gallery-remove:disabled { opacity: 0.3; cursor: not-allowed; }
+.product-gallery-controls {
   position: absolute;
   left: 0;
   right: 0;
@@ -1019,17 +1004,17 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 6px;
+  padding: 3px 4px;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0));
 }
-.site-gallery-controls button {
-  width: 22px;
-  height: 22px;
+.product-gallery-controls button {
+  width: 18px;
+  height: 18px;
   border-radius: 4px;
   border: none;
   background: transparent;
   color: #fff;
-  font-size: 14px;
+  font-size: 12px;
   line-height: 1;
   cursor: pointer;
   display: flex;
@@ -1038,26 +1023,20 @@ body {
   padding: 0;
   transition: background 0.2s, opacity 0.2s;
 }
-.site-gallery-controls button:hover:not(:disabled) { background: rgba(255, 255, 255, 0.25); }
-.site-gallery-controls button:disabled { opacity: 0.3; cursor: not-allowed; }
-.site-gallery-caption-input {
-  width: 100%;
-  font-family: Poppins-Regular, sans-serif;
-  font-size: 12px;
-  padding: 6px 8px;
-  border: 1px solid var(--border-dark);
-  border-radius: 5px;
-  color: #333;
-}
-.site-gallery-caption-input:focus { outline: none; border-color: var(--brand); }
-.site-gallery-add-tile {
+.product-gallery-controls button:hover:not(:disabled) { background: rgba(255, 255, 255, 0.25); }
+.product-gallery-controls button:disabled { opacity: 0.3; cursor: not-allowed; }
+.product-gallery-add-tile {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  font-family: Poppins-Medium, sans-serif;
+  font-size: 11px;
+  color: var(--brand);
+  border: 1px dashed var(--brand);
+  border-radius: 6px;
+  padding: 6px 10px;
 }
-.site-gallery-add-tile input { display: none; }
-
-@media (max-width: 600px) {
-  .site-gallery-caption-input { font-size: 16px; }
-}
+.product-gallery-add-tile:hover { background: rgba(0,0,0,0.03); }
+.product-gallery-add-tile input { display: none; }
+.product-gallery-hint { font-size: 11px; color: #888; margin: 0 0 4px; }

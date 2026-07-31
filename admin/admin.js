@@ -30,13 +30,6 @@
   // always charged). Loaded from /api/settings.
   let freeShippingThreshold = null;
 
-  // Standalone site gallery photos (gallery.html), loaded from /api/gallery.
-  // Separate from each product's own extra photos (product.images) — this
-  // is a flat, admin-ordered list of { id, image, caption } shown on its
-  // own storefront page.
-  let galleryPhotos = [];
-  let nextGalleryId = 1;
-
   const authGate = document.getElementById('auth-gate');
   const app = document.getElementById('app');
   const usernameLabel = document.getElementById('username-label');
@@ -46,6 +39,7 @@
   const saveStatus = document.getElementById('save-status');
   const banner = document.getElementById('banner');
   const productTemplate = document.getElementById('product-template');
+  const productGalleryItemTemplate = document.getElementById('product-gallery-item-template');
   const editCategoriesBtn = document.getElementById('edit-categories-btn');
   const categoriesModal = document.getElementById('categories-modal');
   const categoriesFieldsContainer = document.getElementById('categories-fields');
@@ -67,14 +61,6 @@
   const deliveryCloseX = document.getElementById('delivery-close-x');
   const deliveryCancelBtn = document.getElementById('delivery-cancel-btn');
   const deliverySaveBtn = document.getElementById('delivery-save-btn');
-  const editGalleryBtn = document.getElementById('edit-gallery-btn');
-  const siteGalleryModal = document.getElementById('site-gallery-modal');
-  const siteGalleryFieldsContainer = document.getElementById('site-gallery-fields');
-  const siteGalleryAddInput = document.getElementById('site-gallery-add-input');
-  const siteGalleryAddLabelText = document.getElementById('site-gallery-add-label-text');
-  const siteGalleryCloseX = document.getElementById('site-gallery-close-x');
-  const siteGalleryCancelBtn = document.getElementById('site-gallery-cancel-btn');
-  const siteGallerySaveBtn = document.getElementById('site-gallery-save-btn');
   const productSearchInput = document.getElementById('product-search-input');
   const productSearchClear = document.getElementById('product-search-clear');
   const searchNoResults = document.getElementById('search-no-results');
@@ -138,7 +124,6 @@
       await loadProducts();
       await loadCoupons();
       await loadSettings();
-      await loadGallery();
     } catch (err) {
       authGate.textContent = 'Could not check your session. Please refresh.';
     }
@@ -270,24 +255,6 @@
     } catch (err) {
       showBanner('Could not load delivery charge: ' + err.message, 'error');
     }
-  }
-
-  // --- Load standalone site gallery photos ---
-  async function loadGallery() {
-    try {
-      const res = await fetch('/api/gallery', { cache: 'no-store' });
-      if (!res.ok) throw new Error('Failed to load gallery (status ' + res.status + ')');
-      galleryPhotos = await res.json();
-      if (!Array.isArray(galleryPhotos)) galleryPhotos = [];
-    } catch (err) {
-      showBanner('Could not load the gallery: ' + err.message, 'error');
-      galleryPhotos = [];
-    }
-    let max = 0;
-    galleryPhotos.forEach((p) => {
-      if (typeof p.id === 'number' && p.id > max) max = p.id;
-    });
-    nextGalleryId = max + 1;
   }
 
   // --- Rendering ---
@@ -424,7 +391,9 @@ function moveProduct(product, categoryKey, direction) {
     
     const node = productTemplate.content.firstElementChild.cloneNode(true);
     const img = node.querySelector('.product-photo-img');
-    const photoInput = node.querySelector('.photo-input');
+    const galleryGrid = node.querySelector('.product-gallery-grid');
+    const galleryAddInput = node.querySelector('.product-gallery-add-input');
+    const galleryAddLabelText = node.querySelector('.product-gallery-add-label-text');
     const nameInput = node.querySelector('.p-name-input');
     const descInput = node.querySelector('.p-desc-input');
     const categoryBox = node.querySelector('.p-category-checkboxes');
@@ -518,39 +487,117 @@ function moveProduct(product, categoryKey, direction) {
     wireVariantList(node, product, 'sizes', '.p-size-list', '.p-size-add-input', '.p-size-add-btn');
     wireVariantList(node, product, 'colors', '.p-color-list', '.p-color-add-input', '.p-color-add-btn');
 
-    photoInput.addEventListener('change', async () => {
-      const file = photoInput.files[0];
-      if (!file) return;
-      // Open the crop tool so the manager can adjust the framing/width/height
-      // before it's uploaded. Resolves to null if they cancel.
-      const dataUrl = await openCropper(file);
-      photoInput.value = ''; // allow re-selecting the same file later
-      if (!dataUrl) return;
-      try {
-        img.style.opacity = '0.5';
-        const res = await fetch('/api/upload', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ filename: file.name, dataUrl }),
+    // Keeps the big cover preview and product.image in sync with whatever
+    // is currently first in product.images — the same rule api/products.js
+    // enforces server-side, so this can never drift from what gets saved.
+    function syncCover() {
+      const cover = product.images[0] || '';
+      product.image = cover;
+      img.src = imageSrc(cover);
+    }
+
+    function renderGalleryGrid() {
+      galleryGrid.innerHTML = '';
+      product.images.forEach((photo, idx) => {
+        const node2 = productGalleryItemTemplate.content.firstElementChild.cloneNode(true);
+        const photoImg = node2.querySelector('.product-gallery-img');
+        const removeBtn = node2.querySelector('.product-gallery-remove');
+        const moveLeftBtn = node2.querySelector('.product-gallery-move-left');
+        const moveRightBtn = node2.querySelector('.product-gallery-move-right');
+        const featureBtn = node2.querySelector('.product-gallery-feature');
+
+        photoImg.src = imageSrc(photo);
+        photoImg.alt = product.name || '';
+
+        // At least one photo is required (every product needs a cover), so
+        // the last remaining photo can't be removed.
+        removeBtn.disabled = product.images.length <= 1;
+        removeBtn.addEventListener('click', () => {
+          if (product.images.length <= 1) return;
+          if (!confirm('Remove this photo?')) return;
+          product.images.splice(idx, 1);
+          syncCover();
+          renderGalleryGrid();
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Upload failed');
-        product.image = data.url;
-        img.src = data.url;
-        // Keep the gallery's first slot (the cover) in sync, without
-        // touching any extra photos already added after it (extra photos
-        // aren't editable from this admin panel, but are preserved if a
-        // product already has them from a previous version of this feature).
-        if (!product.images.length) {
-          product.images = [data.url];
-        } else {
-          product.images[0] = data.url;
-        }
-      } catch (err) {
-        showBanner('Photo upload failed: ' + err.message, 'error');
-      } finally {
-        img.style.opacity = '1';
+
+        moveLeftBtn.disabled = idx === 0;
+        moveRightBtn.disabled = idx === product.images.length - 1;
+        moveLeftBtn.addEventListener('click', () => {
+          [product.images[idx - 1], product.images[idx]] = [product.images[idx], product.images[idx - 1]];
+          syncCover();
+          renderGalleryGrid();
+        });
+        moveRightBtn.addEventListener('click', () => {
+          [product.images[idx], product.images[idx + 1]] = [product.images[idx + 1], product.images[idx]];
+          syncCover();
+          renderGalleryGrid();
+        });
+
+        // The cover (index 0) is what shows on listing cards, the cart, and
+        // wishlist — "making a photo the cover" just moves it to the front
+        // of this product's own gallery, same pattern as reordering.
+        node2.querySelector('.product-gallery-photo').classList.toggle('is-cover', idx === 0);
+        featureBtn.disabled = idx === 0;
+        featureBtn.title = idx === 0 ? 'This is the cover photo' : 'Make this the cover photo';
+        featureBtn.addEventListener('click', () => {
+          product.images.splice(idx, 1);
+          product.images.unshift(photo);
+          syncCover();
+          renderGalleryGrid();
+        });
+
+        galleryGrid.appendChild(node2);
+      });
+
+      if (!product.images.length) {
+        const empty = document.createElement('p');
+        empty.className = 'product-gallery-hint';
+        empty.textContent = 'No photos yet — click "+ Add Photo" below.';
+        galleryGrid.appendChild(empty);
       }
+    }
+    renderGalleryGrid();
+
+    galleryAddInput.addEventListener('change', async () => {
+      // Supports selecting multiple photos at once (see `multiple` on the
+      // input). The crop tool only handles one image at a time, so we walk
+      // through the batch sequentially — crop, upload, append.
+      const files = Array.from(galleryAddInput.files || []);
+      galleryAddInput.value = ''; // allow re-selecting the same file(s) later
+      if (!files.length) return;
+
+      for (let i = 0; i < files.length; i++) {
+        if (product.images.length >= MAX_GALLERY_PHOTOS) {
+          showBanner(`Each product can have at most ${MAX_GALLERY_PHOTOS} photos.`, 'error');
+          break;
+        }
+        const file = files[i];
+        if (files.length > 1) {
+          galleryAddLabelText.textContent = `Cropping ${i + 1} of ${files.length}…`;
+        }
+        const dataUrl = await openCropper(file);
+        if (!dataUrl) continue; // manager cancelled the crop for this one — skip it, keep going
+
+        try {
+          if (files.length > 1) {
+            galleryAddLabelText.textContent = `Uploading ${i + 1} of ${files.length}…`;
+          }
+          const res = await fetch('/api/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename: file.name, dataUrl }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Upload failed');
+          product.images.push(data.url);
+          syncCover();
+          renderGalleryGrid();
+        } catch (err) {
+          showBanner(`"${file.name}" failed to upload: ${err.message}`, 'error');
+        }
+      }
+
+      galleryAddLabelText.textContent = '+ Add Photo';
     });
 
     deleteBtn.addEventListener('click', () => {
@@ -1342,169 +1389,6 @@ function moveProduct(product, categoryKey, direction) {
     } finally {
       deliverySaveBtn.disabled = false;
       deliverySaveBtn.textContent = 'Save Delivery Charge';
-    }
-  });
-
-  // --- Manage Gallery modal ---
-  // The standalone site gallery (gallery.html) — a flat, admin-ordered list
-  // of { id, image, caption } photos, separate from each product's own
-  // extra photos (which live on that product's card and save with the main
-  // Save Changes button instead). Uses the same crop tool and /api/upload
-  // endpoint as product photos for a consistent editing experience.
-  const siteGalleryItemTemplate = document.getElementById('site-gallery-item-template');
-
-  function renderSiteGalleryFields() {
-    siteGalleryFieldsContainer.innerHTML = '';
-    galleryPhotos.forEach((photo, idx) => {
-      const node = siteGalleryItemTemplate.content.firstElementChild.cloneNode(true);
-      const img = node.querySelector('.site-gallery-img');
-      const captionInput = node.querySelector('.site-gallery-caption-input');
-      const removeBtn = node.querySelector('.site-gallery-remove');
-      const moveLeftBtn = node.querySelector('.site-gallery-move-left');
-      const moveRightBtn = node.querySelector('.site-gallery-move-right');
-      const featureBtn = node.querySelector('.site-gallery-feature');
-
-      img.src = imageSrc(photo.image);
-      img.alt = photo.caption || '';
-      captionInput.value = photo.caption || '';
-      captionInput.addEventListener('input', () => {
-        photo.caption = captionInput.value;
-      });
-
-      removeBtn.addEventListener('click', () => {
-        if (!confirm('Remove this photo from the gallery?')) return;
-        const i = galleryPhotos.indexOf(photo);
-        if (i !== -1) galleryPhotos.splice(i, 1);
-        renderSiteGalleryFields();
-      });
-
-      moveLeftBtn.disabled = idx === 0;
-      moveRightBtn.disabled = idx === galleryPhotos.length - 1;
-      moveLeftBtn.addEventListener('click', () => {
-        [galleryPhotos[idx - 1], galleryPhotos[idx]] = [galleryPhotos[idx], galleryPhotos[idx - 1]];
-        renderSiteGalleryFields();
-      });
-      moveRightBtn.addEventListener('click', () => {
-        [galleryPhotos[idx], galleryPhotos[idx + 1]] = [galleryPhotos[idx + 1], galleryPhotos[idx]];
-        renderSiteGalleryFields();
-      });
-
-      // The Gallery page always opens with photo index 0 shown large and
-      // centered (the rest dimmed/blurred to either side — see
-      // .gallery-slick .slick-slide.slick-center in shop-additions.css and
-      // the centerMode Slick carousel in js/gallery-render.js). So "make
-      // this the featured photo" just means moving it to the front of the
-      // list — no separate flag needed, and it stays in sync with reality
-      // even if a manager reorders things afterwards.
-      node.querySelector('.site-gallery-photo').classList.toggle('is-featured', idx === 0);
-      featureBtn.disabled = idx === 0;
-      featureBtn.title = idx === 0 ? 'This is the featured photo' : 'Show this photo first';
-      featureBtn.addEventListener('click', () => {
-        galleryPhotos.splice(idx, 1);
-        galleryPhotos.unshift(photo);
-        renderSiteGalleryFields();
-      });
-
-      siteGalleryFieldsContainer.appendChild(node);
-    });
-
-    if (!galleryPhotos.length) {
-      const empty = document.createElement('p');
-      empty.className = 'gallery-empty-hint';
-      empty.textContent = 'No gallery photos yet — click "+ Add Photo" below to add the first one.';
-      siteGalleryFieldsContainer.appendChild(empty);
-    }
-  }
-
-  function openSiteGalleryModal() {
-    renderSiteGalleryFields();
-    siteGalleryModal.classList.remove('hidden');
-  }
-
-  function closeSiteGalleryModal() {
-    siteGalleryModal.classList.add('hidden');
-  }
-
-  editGalleryBtn.addEventListener('click', openSiteGalleryModal);
-  siteGalleryCloseX.addEventListener('click', closeSiteGalleryModal);
-  siteGalleryCancelBtn.addEventListener('click', closeSiteGalleryModal);
-  siteGalleryModal.addEventListener('click', (e) => {
-    if (e.target === siteGalleryModal) closeSiteGalleryModal();
-  });
-
-  siteGalleryAddInput.addEventListener('change', async () => {
-    // Supports selecting multiple photos at once (see `multiple` on the
-    // input in admin/index.html). The crop tool only handles one image at
-    // a time, so we walk through the batch sequentially — crop, upload,
-    // append — rather than trying to crop them all in parallel.
-    const files = Array.from(siteGalleryAddInput.files || []);
-    siteGalleryAddInput.value = ''; // allow re-selecting the same file(s) later
-    if (!files.length) return;
-
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      if (files.length > 1) {
-        siteGalleryAddLabelText.textContent = `Cropping ${i + 1} of ${files.length}…`;
-      }
-      const dataUrl = await openCropper(file);
-      if (!dataUrl) continue; // manager cancelled the crop for this one — skip it, keep going
-
-      try {
-        if (files.length > 1) {
-          siteGalleryAddLabelText.textContent = `Uploading ${i + 1} of ${files.length}…`;
-        }
-        const res = await fetch('/api/upload', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ filename: file.name, dataUrl }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Upload failed');
-        galleryPhotos.push({ id: nextGalleryId++, image: data.url, caption: '' });
-        renderSiteGalleryFields();
-      } catch (err) {
-        showBanner(`"${file.name}" failed to upload: ${err.message}`, 'error');
-      }
-    }
-
-    siteGalleryAddLabelText.textContent = '+ Add Photo';
-  });
-
-  siteGallerySaveBtn.addEventListener('click', async () => {
-    // Pull each card's current caption text (in case a manager typed one
-    // without tabbing/clicking away, which the 'input' listener above
-    // already keeps in sync with, but this ensures nothing is stale) and
-    // normalize empty captions to null so they save the same way the
-    // bundled defaults do.
-    const cards = Array.from(siteGalleryFieldsContainer.querySelectorAll('.site-gallery-item'));
-    cards.forEach((card, idx) => {
-      const captionInput = card.querySelector('.site-gallery-caption-input');
-      if (galleryPhotos[idx]) {
-        galleryPhotos[idx].caption = captionInput ? captionInput.value.trim() || null : null;
-      }
-    });
-
-    const payload = galleryPhotos.map((p) => ({ id: p.id, image: p.image, caption: p.caption || null }));
-
-    siteGallerySaveBtn.disabled = true;
-    siteGallerySaveBtn.textContent = 'Saving…';
-    try {
-      const res = await fetch('/api/gallery', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to save gallery');
-
-      galleryPhotos = payload;
-      closeSiteGalleryModal();
-      showBanner('Gallery updated — changes are live on the site now.', 'success');
-    } catch (err) {
-      showBanner('Could not save gallery: ' + err.message, 'error');
-    } finally {
-      siteGallerySaveBtn.disabled = false;
-      siteGallerySaveBtn.textContent = 'Save Gallery';
     }
   });
 

@@ -175,38 +175,82 @@
     if (window.jQuery && window.jQuery(track).hasClass('slick-initialized')) {
       window.jQuery(track).slick('unslick');
     }
+    if (dotsBox) {
+      const $existingThumbs = window.jQuery(dotsBox).find('.slick3-thumbs.slick-initialized');
+      if ($existingThumbs.length) $existingThumbs.slick('unslick');
+    }
 
     track.innerHTML = '';
     images.forEach((src) => track.appendChild(buildGallerySlide(src)));
 
     const multi = images.length > 1;
-    if (dotsBox) dotsBox.style.display = multi ? '' : 'none';
+    if (dotsBox) {
+      dotsBox.style.display = multi ? '' : 'none';
+      dotsBox.innerHTML = '';
+    }
     if (arrowsBox) arrowsBox.style.display = multi ? '' : 'none';
     // .slick3 is normally 83.33% wide to leave room for the dots column -
     // reclaim that space when there's only one photo to show.
     track.style.width = multi ? '' : '100%';
 
     if (multi && window.jQuery && window.jQuery.fn.slick) {
-      window.jQuery(track).slick({
+      const $track = window.jQuery(track);
+      const $dotsBox = window.jQuery(dotsBox);
+
+      // Build the thumbnail strip ourselves (one slide per photo) instead
+      // of using Slick's built-in dots, so it can be its own coverflow-
+      // style carousel — center thumb clear/larger, the rest dimmed and
+      // blurred to either side — with its own prev/next buttons to scroll
+      // through any thumbs that don't fit, synced to the main photo via
+      // asNavFor in both directions.
+      $dotsBox.empty();
+      const $thumbs = window.jQuery('<div class="slick3-thumbs"></div>');
+      images.forEach((src) => {
+        $thumbs.append('<div class="slick3-thumb-item"><img src="' + src + '" alt=""></div>');
+      });
+      $dotsBox.append($thumbs);
+
+      $track.slick({
         slidesToShow: 1,
         slidesToScroll: 1,
-        fade: true,
+        fade: false,
         infinite: true,
         autoplay: false,
         autoplaySpeed: 6000,
+        asNavFor: $thumbs,
 
         arrows: true,
         appendArrows: window.jQuery(wrap).find('.wrap-slick3-arrows'),
         prevArrow: '<button class="arrow-slick3 prev-slick3"><i class="fa fa-angle-left" aria-hidden="true"></i></button>',
         nextArrow: '<button class="arrow-slick3 next-slick3"><i class="fa fa-angle-right" aria-hidden="true"></i></button>',
 
-        dots: true,
-        appendDots: window.jQuery(wrap).find('.wrap-slick3-dots'),
-        dotsClass: 'slick3-dots',
-        customPaging: function (slick, index) {
-          const portrait = window.jQuery(slick.$slides[index]).data('thumb');
-          return '<img src=" ' + portrait + ' "/><div class="slick3-dot-overlay"></div>';
-        },
+        dots: false,
+      });
+
+      $thumbs.slick({
+        slidesToShow: Math.min(3, images.length),
+        slidesToScroll: 1,
+        centerMode: true,
+        centerPadding: '0px',
+        fade: false,
+        infinite: true,
+        autoplay: false,
+        asNavFor: $track,
+        focusOnSelect: true,
+
+        arrows: true,
+        prevArrow: '<button type="button" class="slick3-thumb-arrow slick3-thumb-prev" aria-label="Previous photos"><i class="fa fa-angle-left" aria-hidden="true"></i></button>',
+        nextArrow: '<button type="button" class="slick3-thumb-arrow slick3-thumb-next" aria-label="More photos"><i class="fa fa-angle-right" aria-hidden="true"></i></button>',
+
+        responsive: [
+          {
+            breakpoint: 767,
+            settings: {
+              slidesToShow: Math.min(3, images.length),
+              centerMode: true,
+            },
+          },
+        ],
       });
     }
   }

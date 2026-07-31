@@ -57,12 +57,14 @@ effect.
 3. Products are grouped into a section per category automatically. Use
    **+ Add Product** to add a new item, or edit any existing card's name,
    category, price, sizes, colors, and availability directly in the fields.
-4. Click **Change Photo** on any product to upload a new cover photo — it's
-   resized automatically so uploads stay small and fast. Use **+ Add Photo**
-   under **Additional Gallery Photos** to add up to 5 more photos of the
-   same product; they show up together with the cover as a swipeable photo
-   slider (with a zoom/lightbox) on that product's page. Click the **×** on
-   any extra photo's thumbnail to remove it.
+4. Each product has its own **Photos** grid — click **+ Add Photo** to
+   upload one or more photos (up to 6 total per product; each is resized
+   automatically so uploads stay small and fast). They show up together as
+   a swipeable, slide-through photo gallery (with a zoom/lightbox) on that
+   product's page. Click **&#9733;** on any photo to make it the cover —
+   the one shown on listing cards and in the cart — use the **&#8249; &#8250;**
+   arrows to reorder the rest, or click the **×** on a photo to remove it
+   (every product needs at least one).
 5. Toggle **Apply a discount** to show a crossed-out old price next to the
    current price on the storefront.
 6. Toggle **In Stock** off to automatically show an "Out of Stock" badge on
