@@ -55,6 +55,16 @@
     return 'images/' + image;
   }
 
+  // Wishlist rows store price as the display string already shown on the
+  // card (e.g. "Rs. 7,000"). Cart.add() needs a plain number. Strip every
+  // non-digit character — including the period after "Rs" and the comma —
+  // rather than just non-digit/dot, otherwise "Rs. 7,000" becomes ".7000"
+  // (≈0.7) instead of 7000.
+  function priceToNumber(priceStr) {
+    const digits = String(priceStr || '').replace(/[^0-9]/g, '');
+    return Number(digits) || 0;
+  }
+
   function escapeHtml(str) {
     return String(str || '').replace(/[&<>"']/g, (c) => ({
       '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
@@ -139,7 +149,10 @@
         <td class="column-3">${escapeHtml(item.price) || '&mdash;'}</td>
         <td class="column-5">
           <div class="flex-w flex-r-m">
-            <div class="flex-c-m stext-101 cl2 size-118 bg8 bor13 hov-btn3 p-lr-15 trans-04 pointer js-wishlist-remove">
+            <div class="flex-c-m stext-101 cl0 size-118 bg3 bor13 hov-btn1 p-lr-15 trans-04 pointer js-wishlist-addcart">
+              Add to Cart
+            </div>
+            <div class="flex-c-m stext-101 cl2 size-118 bg8 bor13 hov-btn3 p-lr-15 trans-04 pointer js-wishlist-remove m-l-10">
               Remove
             </div>
           </div>
@@ -155,6 +168,40 @@
         renderWishlistPage();
       });
     });
+
+    tbody.querySelectorAll('.js-wishlist-addcart').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        if (!window.ZazCart) return;
+        const key = e.target.closest('tr').dataset.key;
+        const item = readWishlist().find((i) => i.key === key);
+        if (!item) return;
+
+        window.ZazCart.add(
+          {
+            id: item.id || item.key,
+            name: item.name,
+            price: priceToNumber(item.price),
+            // item.image is already a resolved path (e.g. "images/foo.webp")
+            // straight from the DOM. cart.js's own imageSrc() always
+            // prepends "images/" to whatever it's given (it expects a bare
+            // filename, matching what the product API returns), so passing
+            // the already-resolved path through unchanged would double it
+            // into "images/images/foo.webp". Strip the prefix back off
+            // here — full https:// URLs (admin-uploaded photos) are left
+            // alone since they don't have it.
+            image: (item.image || '').replace(/^images\//i, ''),
+          },
+          1,
+          {} // no size/color captured from the wishlist card — Cart.add
+             // accepts blank variants, they just won't show a size/color
+             // on that cart line
+        );
+
+        const original = e.target.textContent;
+        e.target.textContent = 'Added ✓';
+        setTimeout(() => { e.target.textContent = original; }, 1200);
+      });
+    });
   }
 
   // --- Grid / carousel product cards (.block2) ---
@@ -166,8 +213,16 @@
     const imgEl = card.querySelector('.block2-pic img');
     const name = nameEl ? nameEl.textContent.trim() : '';
     if (!name) return null;
+    // nameEl's href is "product-detail.html?id=123" — pull the id out of it
+    // so wishlist items can later be added straight to the cart.
+    let id = null;
+    if (nameEl && nameEl.getAttribute('href')) {
+      const match = nameEl.getAttribute('href').match(/[?&]id=([^&]+)/);
+      if (match) id = match[1];
+    }
     return {
       key: slugify(name),
+      id,
       name,
       price: priceEl ? priceEl.textContent.trim() : '',
       image: imgEl ? imgEl.getAttribute('src') || '' : '',
@@ -202,8 +257,14 @@
     const imgEl = scope.querySelector('.item-slick3 img, .item-slick2 img');
     const name = nameEl ? nameEl.textContent.trim() : '';
     if (!name) return null;
+    // On the standalone product-detail page the id is in the page's own
+    // URL (product-detail.html?id=123). Inside the Quick View modal there's
+    // no such URL to read, so id stays null there — the wishlist item still
+    // works, it just falls back to its slug when added to cart later.
+    const urlId = new URLSearchParams(window.location.search).get('id');
     return {
       key: slugify(name),
+      id: urlId || null,
       name,
       price: priceEl ? priceEl.textContent.trim() : '',
       image: imgEl ? imgEl.getAttribute('src') || '' : '',
