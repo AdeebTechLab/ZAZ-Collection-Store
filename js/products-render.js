@@ -291,7 +291,7 @@
     }
 
     col.style.display = '';
-    list.forEach((value) => {
+    list.forEach((value, index) => {
       const chip = document.createElement('button');
       chip.type = 'button';
       chip.className = 'variant-chip';
@@ -306,6 +306,15 @@
         if (errorBox) errorBox.style.display = 'none';
       });
       optionsBox.appendChild(chip);
+
+      // Pre-select the first option so a shopper who doesn't touch the
+      // Size/Color pickers at all still has a valid pick (the product's
+      // "default" variant) instead of being blocked by the "please select"
+      // validation the first time they hit Add to Cart.
+      if (index === 0) {
+        chip.classList.add('is-selected');
+        optionsBox.dataset.value = value;
+      }
     });
   }
 

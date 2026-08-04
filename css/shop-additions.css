@@ -327,7 +327,7 @@ instead, using the existing column classes with CSS-generated labels. */
 	gap: 4px;
 	border: none;
 	background: none;
-	color: #717fe0;
+	color: #A67C27;
 	font-size: 11px;
 	font-weight: 600;
 	letter-spacing: 0.2px;
@@ -373,7 +373,7 @@ instead, using the existing column classes with CSS-generated labels. */
 }
 .checkout-input:focus {
 	outline: none;
-	border-color: #717fe0;
+	border-color: #A67C27;
 	background: #fff;
 }
 .checkout-textarea {
@@ -427,8 +427,8 @@ instead, using the existing column classes with CSS-generated labels. */
 	width: 46px;
 	height: 46px;
 	border-radius: 50%;
-	background: rgba(113, 127, 224, 0.12);
-	color: #717fe0;
+	background: rgba(166, 124, 39, 0.12);
+	color: #A67C27;
 	font-size: 20px;
 }
 .features-txt h5 {
@@ -488,7 +488,7 @@ instead, using the existing column classes with CSS-generated labels. */
 	position: absolute;
 	top: 14px;
 	left: 14px;
-	background: #717fe0;
+	background: #A67C27;
 	color: #fff;
 	font-family: Poppins-Medium;
 	font-size: 12px;
@@ -502,7 +502,7 @@ instead, using the existing column classes with CSS-generated labels. */
 	margin-bottom: 6px;
 }
 .flash-sale-name:hover {
-	color: #717fe0;
+	color: #A67C27;
 }
 .flash-sale-price {
 	font-family: Poppins-Medium;
@@ -515,7 +515,7 @@ instead, using the existing column classes with CSS-generated labels. */
 	font-size: 14px;
 }
 .flash-sale-newprice {
-	color: #717fe0;
+	color: #A67C27;
 }
 
 /* Slick ships without slick-theme.css in this project (the theme styles
@@ -541,7 +541,7 @@ instead, using the existing column classes with CSS-generated labels. */
 	cursor: pointer;
 }
 .flash-sales-track .slick-dots li.slick-active button {
-	background: #717fe0;
+	background: #A67C27;
 }
 
 /*==================================================================
@@ -585,7 +585,7 @@ instead, using the existing column classes with CSS-generated labels. */
 .deal-week-divider {
 	width: 50px;
 	height: 3px;
-	background: #717fe0;
+	background: #A67C27;
 	margin: 18px 0 40px;
 }
 .deal-week-countdown {
@@ -611,7 +611,7 @@ instead, using the existing column classes with CSS-generated labels. */
 .deal-week-time-num {
 	font-family: Poppins-Bold;
 	font-size: 34px;
-	color: #717fe0;
+	color: #A67C27;
 	line-height: 1;
 }
 .deal-week-time-label {
@@ -631,7 +631,7 @@ instead, using the existing column classes with CSS-generated labels. */
 	transition: background 0.3s;
 }
 .deal-week-btn:hover {
-	background: #717fe0;
+	background: #A67C27;
 	color: #fff;
 }
 
@@ -681,8 +681,8 @@ sale page's red accent instead of the homepage's blue-tinted icons. */
 	width: 56px;
 	height: 56px;
 	background: transparent;
-	border: 2px solid #717fe0;
-	color: #717fe0;
+	border: 2px solid #A67C27;
+	color: #A67C27;
 	font-size: 22px;
 }
 .features-bar--cards .features-txt h5 {
@@ -793,7 +793,7 @@ sale page's red accent instead of the homepage's blue-tinted icons. */
 	gap: 8px;
 }
 .coll-banner-link i { font-size: 12px; transition: transform 0.25s; }
-.coll-banner-link:hover { color: #717fe0; }
+.coll-banner-link:hover { color: #A67C27; }
 .coll-banner-link:hover i { transform: translateX(4px); }
 
 @media (max-width: 991px) {
@@ -851,11 +851,11 @@ js/shop-search.js — it targets .js-shop-search / .isotope-item /
 }
 .shop-search-input:focus {
 	outline: none;
-	border-color: #6c7ae0;
+	border-color: #8C6620;
 	box-shadow: 0 0 0 3px rgba(108, 122, 224, 0.15);
 }
 .shop-search-input:focus ~ .shop-search-icon {
-	color: #6c7ae0;
+	color: #8C6620;
 }
 .shop-search-clear {
 	position: absolute;
@@ -909,7 +909,7 @@ Quick View modal once js/wishlist.js has added that product — the
 grid-card heart's own filled/outline swap is already handled by the
 theme's existing .js-addedwish-b2 rule in main.css. */
 .js-addwish-detail.is-added-wish {
-	color: #717fe0;
+	color: #A67C27;
 }
 
 /*==================================================================
@@ -950,6 +950,10 @@ behavior (builds a wa.me link instead of posting anywhere). */
 Replaces the theme's default "Newsletter" signup column with the
 site's actual logo (same file used in the header), so the footer
 reinforces the brand instead of asking for an email a second time.
+The footer background is dark, so the logo (originally designed on
+white, with black wordmark) sits inside a light rounded badge here —
+that keeps it pixel-for-pixel identical to the header logo instead of
+using a separate recolored copy, while still staying legible.
 Sized with max-width instead of a fixed width so it shrinks cleanly
 on narrow screens — the column itself already stacks responsively
 via the shared col-sm-6 col-lg-3 grid classes used by every other
@@ -959,11 +963,20 @@ footer column. */
 	flex-direction: column;
 	align-items: flex-start;
 }
+.footer-logo-col .footer-logo-badge {
+	display: inline-block;
+	background-color: #fff;
+	padding: 14px 20px;
+	border-radius: 8px;
+	margin-bottom: 18px;
+	-webkit-box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
 .footer-logo-col .footer-logo-img {
+	display: block;
 	max-width: 160px;
 	width: 100%;
 	height: auto;
-	margin-bottom: 18px;
 }
 .footer-logo-col .footer-logo-tagline {
 	max-width: 240px;
@@ -973,10 +986,12 @@ footer column. */
 		align-items: center;
 		text-align: center;
 	}
-	.footer-logo-col .footer-logo-img {
-		max-width: 130px;
+	.footer-logo-col .footer-logo-badge {
 		margin-left: auto;
 		margin-right: auto;
+	}
+	.footer-logo-col .footer-logo-img {
+		max-width: 130px;
 	}
 }
 
@@ -1156,12 +1171,12 @@ hidden entirely if the product has no values for that variant type. */
 	transition: all 0.2s ease;
 }
 .variant-chip:hover {
-	border-color: #717fe0;
-	color: #717fe0;
+	border-color: #A67C27;
+	color: #A67C27;
 }
 .variant-chip.is-selected {
-	background: #717fe0;
-	border-color: #717fe0;
+	background: #A67C27;
+	border-color: #A67C27;
 	color: #fff;
 }
 .variant-picker-col.is-invalid .variant-picker-label {
@@ -1233,7 +1248,7 @@ its own prev/next buttons scroll through any thumbs that don't fit. */
 }
 .slick3-thumbs .slick-slide.slick-center .slick3-thumb-item,
 .slick3-thumbs .slick-slide.slick-current .slick3-thumb-item {
-	border-color: #717fe0;
+	border-color: #A67C27;
 }
 .slick3-thumb-item img {
 	width: 100%;
